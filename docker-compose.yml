@@ -1,0 +1,83 @@
+name: 'simplerqms-hiring-case'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    ports:
+      - 5432:5432
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=PPk4nz5Zd1csikqjqnsc
+      - POSTGRES_USER=backend
+      - POSTGRES_DB=hiring_case
+    volumes:
+      - './init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U backend -d hiring_case']
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  node:
+    image: 'simplerqms-hiring-case/node:latest'
+    build:
+      context: './node'
+      dockerfile: 'Dockerfile'
+    restart: 'always'
+    ports:
+      - '3000:3000'
+    volumes:
+      - './node/app.ts:/app/app.ts'
+      - './node/routes:/app/routes'
+      - './node/utils:/app/utils'
+    environment:
+      - DATABASE_PASSWORD=PPk4nz5Zd1csikqjqnsc
+    depends_on:
+      postgres:
+        condition: 'service_healthy'
+
+  # rails:
+  #   image: "simplerqms-hiring-case/rails_api:latest"
+  #   build:
+  #     context: "./rails_api"
+  #     dockerfile: "Dockerfile"
+  #   restart: "always"
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - "./rails_api:/usr/src/app"
+  #   environment:
+  #     - DATABASE_URL=postgresql://backend:PPk4nz5Zd1csikqjqnsc@postgres/hiring_case
+  #     - RAILS_LOG_LEVEL=debug
+  #   depends_on:
+  #     postgres:
+  #       condition: "service_healthy"
+
+  # golang:
+  #   image: "simplerqms-hiring-case/golang:latest"
+  #   build:
+  #     context: "./golang"
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./golang:/app
+  #   environment:
+  #     - DATABASE_URL=postgresql://backend:PPk4nz5Zd1csikqjqnsc@postgres/hiring_case
+  #   depends_on:
+  #     postgres:
+  #       condition: "service_healthy"
+
+  frontend:
+    image: 'simplerqms-hiring-case/frontend:latest'
+    build:
+      context: './frontend'
+      dockerfile: 'Dockerfile'
+    restart: 'always'
+    ports:
+      - '5173:5173'
+    volumes:
+      - './frontend/src:/app/src'
+      - './frontend/public:/app/public'
+      - './frontend/package.json:/app/package.json'
+      - './frontend/package-lock.json:/app/package-lock.json'
