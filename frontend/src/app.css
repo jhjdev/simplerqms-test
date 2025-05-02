@@ -13,6 +13,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root h1, :root h2, :root h3, :root h4, :root h5, :root h6 {
+  color: inherit;
+}
+
 a {
   font-weight: 500;
   color: #646cff;

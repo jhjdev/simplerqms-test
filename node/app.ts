@@ -28,6 +28,9 @@ app.use('/api/groups', groupRouter);
 app.use('/api/groups', groupMemberRouter);
 app.use('/api/groups', groupHierarchyRouter);
 
+// Swagger documentation temporarily disabled
+// Uncomment when ESM compatibility issues are resolved
+
 // catch 404 and forward to error handler
 app.use(function (req: express.Request, res: express.Response, next: express.NextFunction) {
   next(createError(404));
@@ -44,4 +47,5 @@ app.use(function (err: any, req: express.Request, res: express.Response, next: e
   res.json({ error: err.message });
 });
 
+export { app };
 export default app;

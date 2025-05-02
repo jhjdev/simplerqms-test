@@ -1,10 +1,10 @@
 import * as express from 'express';
-const groupHierarchyRouter = express.Router();
+const router = express.Router();
 
-import sql from '../utils/db.ts';
+import sql from '../utils/db.js';
 
 // Get all members within a group hierarchy
-groupHierarchyRouter.get('/:groupId/members', async function (req, res, next) {
+router.get('/:groupId/members', async function (req, res, next) {
   const { groupId } = req.params;
   const result = await sql`
     WITH RECURSIVE group_hierarchy AS (
@@ -22,4 +22,4 @@ groupHierarchyRouter.get('/:groupId/members', async function (req, res, next) {
   res.json(result);
 });
 
-export default groupHierarchyRouter;
+export default router;

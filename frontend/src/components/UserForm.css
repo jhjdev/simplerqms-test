@@ -1,0 +1,88 @@
+.form-card {
+  margin-bottom: 40px;
+  width: 100%;
+  padding: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.form-card {
+  margin-bottom: 40px;
+  width: 100%;
+  padding: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.form-fields-container {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.form-field {
+  margin-bottom: 1rem;
+  grid-column: 2;
+}
+
+@media (prefers-color-scheme: dark) {
+  h2 {
+    color: rgba(255, 255, 255, 0.87);
+  }
+}
+
+:global(.mdc-text-field) {
+  height: 50px !important;
+}
+
+:global(.mdc-text-field .mdc-text-field__input) {
+  height: 50px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.form-field :global(.smui-text-field--standard) {
+  width: 100%;
+}
+
+.form-field :global(.mdc-text-field--focused) {
+  background-color: rgba(63, 81, 181, 0.05);
+}
+
+:global(.create-user-button) :global(.mdc-button__ripple),
+:global(.create-user-button) :global(.mdc-button__touch),
+:global(.create-user-button):not(:disabled) {
+  height: 3.5rem !important;
+  padding: 0 3rem !important;
+  font-size: 1.1rem !important;
+  text-transform: none !important;
+  min-width: 12rem !important;
+}
+
+:global(.create-user-button) :global(.mdc-button__label) {
+  font-size: 1.1rem !important;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+}
