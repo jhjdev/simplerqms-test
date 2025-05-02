@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN type VARCHAR(255) CHECK(type IN ('user')) NOT NULL DEFAULT 'user';
