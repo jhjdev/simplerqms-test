@@ -1,6 +1,7 @@
 <script lang="ts">
   import UserTable from "./components/UserTable.svelte";
   import GroupTreeView from "./components/GroupTreeView.svelte";
+  import EnhancedGroupTreeView from "./components/EnhancedGroupTreeView.svelte";
   import CreateEntityForm from "./components/CreateEntityForm.svelte";
   import GroupMembershipPanel from "./components/GroupMembershipPanel.svelte";
   import Button from '@smui/button';
@@ -12,7 +13,7 @@
   let isLoading = false;
   let errorMessage = '';
   let successMessage = '';
-  let currentPage = window.location.pathname === '/about' ? 'about' : 'home';
+  let currentPage = window.location.pathname === '/about' ? 'about' : (window.location.pathname === '/faq' ? 'faq' : 'home');
   
   // Dialog state
   let showSuccessDialog = false;
@@ -60,12 +61,21 @@
 
   function navigate(page: string) {
     currentPage = page;
-    window.history.pushState({}, '', page === 'home' ? '/' : '/about');
+    let path = '/';
+    if (page === 'about') path = '/about';
+    if (page === 'faq') path = '/faq';
+    window.history.pushState({}, '', path);
   }
 
   if (typeof window !== 'undefined') {
     window.addEventListener('popstate', () => {
-      currentPage = window.location.pathname === '/about' ? 'about' : 'home';
+      if (window.location.pathname === '/about') {
+        currentPage = 'about';
+      } else if (window.location.pathname === '/faq') {
+        currentPage = 'faq';
+      } else {
+        currentPage = 'home';
+      }
     });
   }
 
@@ -252,6 +262,18 @@
     }
   }
 
+  // Handle group deletion
+  async function handleGroupDeleted(event: CustomEvent<Group>) {
+    const deletedGroup = event.detail;
+    console.log('Group deleted:', deletedGroup);
+    
+    // Refresh the groups list
+    await fetchGroups();
+    
+    // Show success message
+    showDialog('success', `Group '${deletedGroup.name}' deleted successfully`);
+  }
+  
   // Fetch data when the component mounts
   fetchUsers();
   fetchGroups();
@@ -285,6 +307,15 @@
           About
         </a>
       </li>
+      <li>
+        <a 
+          href="/faq" 
+          class:active={currentPage === 'faq'}
+          on:click|preventDefault={() => navigate('faq')}
+        >
+          FAQ
+        </a>
+      </li>
     </ul>
   </nav>
 
@@ -300,7 +331,13 @@
           on:groupSubmit={() => fetchGroups()}
         />
 
-        <GroupTreeView {groups} {users} on:userEdit={handleUserEdit} on:groupUpdated={() => fetchGroups()} />
+        <EnhancedGroupTreeView
+          groups={groups}
+          users={users}
+          on:groupUpdated={fetchGroups}
+          on:groupDeleted={handleGroupDeleted}
+          on:userEdit={handleUserEdit}
+        />
 
         <UserTable
           {users}
@@ -312,10 +349,117 @@
           {groups}
         />
       </div>
-    {:else}
+    {:else if currentPage === 'about'}
       <div class="about-content">
-        <h2>About Simpler QMS</h2>
-        <p>A simple and efficient Quality Management System designed to help organizations manage their requirements effectively.</p>
+        <h1>SimplerQMS User and Group Management System</h1>
+        
+        <div class="about-section">
+          <h2>About This Project</h2>
+          <p>This project was originally a technical test for SimplerQMS that I have since expanded upon. I decided to use it as a learning tool to expand my skill set and create a showcase of various technologies and best practices in modern web development. Through this project, I've implemented testing frameworks, API documentation, UI enhancements, and CI/CD workflows to demonstrate a comprehensive approach to full-stack development.</p>
+        </div>
+        
+        <div class="about-section">
+          <h2>Overview</h2>
+          <p>This application provides a comprehensive system for managing users, groups, and their hierarchical relationships. It includes both a RESTful API and a modern web interface for managing these entities.</p>
+        </div>
+        
+        <div class="about-section">
+          <h2>Features</h2>
+          <ul>
+            <li>Create, list, update, and delete users</li>
+            <li>Create, list, update, and delete groups</li>
+            <li>Add, remove, and list members of a group</li>
+            <li>Check if a member is within a group hierarchy</li>
+            <li>Get all members within a group hierarchy</li>
+            <li>Support for group-to-group relationships (groups can contain other groups)</li>
+            <li>Modern web interface for all operations</li>
+          </ul>
+        </div>
+        
+        <div class="about-section">
+          <h2>Technology Stack</h2>
+          <ul>
+            <li><strong>Backend</strong>: Node.js with Express.js</li>
+            <li><strong>Database</strong>: PostgreSQL</li>
+            <li><strong>Frontend</strong>: Svelte with Material UI components</li>
+            <li><strong>Containerization</strong>: Docker and Docker Compose</li>
+          </ul>
+        </div>
+        
+        <div class="about-section">
+          <h2>Bonus Features Implemented</h2>
+          
+          <h3>Testing</h3>
+          <ul>
+            <li>Unit Tests: Backend API endpoint tests using Jest and Supertest</li>
+            <li>Frontend Tests: Component tests using Vitest and Testing Library</li>
+            <li>Test Configuration: Separate TypeScript configuration for tests</li>
+          </ul>
+          
+          <h3>Documentation</h3>
+          <ul>
+            <li>API Documentation: Swagger/OpenAPI documentation for all endpoints</li>
+            <li>User Guide: Comprehensive README with setup and usage instructions</li>
+            <li>Code Documentation: JSDoc comments for better code understanding</li>
+          </ul>
+          
+          <h3>UI Enhancements</h3>
+          <ul>
+            <li>Enhanced TreeView: Improved group hierarchy visualization with search functionality</li>
+            <li>Member Count Display: Visual indicators of group size and hierarchy depth</li>
+            <li>Expand/Collapse: Better navigation of complex hierarchies</li>
+            <li>Accessibility Improvements: ARIA roles and keyboard navigation support</li>
+          </ul>
+          
+          <h3>CI/CD</h3>
+          <ul>
+            <li>GitHub Actions: Automated testing and build pipeline</li>
+            <li>Linting: Code quality checks integrated into CI pipeline</li>
+            <li>Artifact Generation: Build artifacts for deployment</li>
+          </ul>
+        </div>
+      </div>
+    {:else}
+      <div class="faq-content">
+        <h2>Frequently Asked Questions</h2>
+        
+        <div class="faq-section">
+          <h3>How to Access the Application</h3>
+          <p>Here are the main access points for the SimplerQMS application:</p>
+          
+          <div class="link-section">
+            <h4>Frontend Application</h4>
+            <p>This is the main user interface for the SimplerQMS application:</p>
+            <a href="http://localhost:5173" target="_blank" rel="noopener">Open Frontend Application</a>
+          </div>
+          
+          <div class="link-section">
+            <h4>API Endpoints</h4>
+            <p>Direct access to the backend API endpoints:</p>
+            <a href="http://localhost:3000/api/groups" target="_blank" rel="noopener">View All Groups</a>
+            <a href="http://localhost:3000/api/groups/hierarchy" target="_blank" rel="noopener">View Group Hierarchy</a>
+            <a href="http://localhost:3000/api/users" target="_blank" rel="noopener">View All Users</a>
+          </div>
+        </div>
+        
+        <div class="faq-section">
+          <h3>How to Run Tests</h3>
+          <p>To run the tests for the application:</p>
+          <ol>
+            <li>For backend tests: <code>docker compose exec node npm test</code></li>
+            <li>For frontend tests: <code>docker compose exec frontend npm test</code></li>
+          </ol>
+        </div>
+        
+        <div class="faq-section">
+          <h3>What features have been implemented?</h3>
+          <ul>
+            <li><strong>Testing</strong>: Simple but effective tests for both frontend and backend</li>
+            <li><strong>Documentation</strong>: Comprehensive API documentation and user guides</li>
+            <li><strong>UI Enhancements</strong>: Improved group hierarchy visualization with search</li>
+            <li><strong>CI/CD</strong>: GitHub Actions workflow for automated testing and deployment</li>
+          </ul>
+        </div>
       </div>
     {/if}
   </main>
@@ -324,11 +468,11 @@
 <!-- Custom Success Dialog -->
 {#if showSuccessDialog}
   <div class="dialog-overlay" role="dialog" aria-modal="true" on:click={() => showSuccessDialog = false} on:keydown={(e) => e.key === 'Escape' && (showSuccessDialog = false)}>
-    <div class="dialog success-dialog" on:click|stopPropagation on:keydown={() => {}}>
+    <div class="dialog success-dialog" role="document" on:click|stopPropagation>
       <div class="dialog-header">
         <h3>Success</h3>
       </div>
-      <div class="dialog-content" on:click={() => {}} on:keydown={() => {}}>
+      <div class="dialog-content">
         {dialogMessage}
       </div>
       <div class="dialog-actions">
@@ -341,18 +485,18 @@
 <!-- Custom Error Dialog -->
 {#if showErrorDialog}
   <div class="dialog-overlay" role="dialog" aria-modal="true" on:click={() => showErrorDialog = false} on:keydown={(e) => e.key === 'Escape' && (showErrorDialog = false)}>
-    <div class="dialog error-dialog" on:click|stopPropagation on:keydown={() => {}}>
+    <div class="dialog error-dialog" role="document" on:click|stopPropagation>
       <div class="dialog-header">
         <h3>Error</h3>
       </div>
-      <div class="dialog-content" on:click={() => {}} on:keydown={() => {}}>
+      <div class="dialog-content">
         {dialogMessage}
-    </div>
-    <div class="dialog-actions">
-      <Button on:click={() => showErrorDialog = false}>Close</Button>
+      </div>
+      <div class="dialog-actions">
+        <Button on:click={() => showErrorDialog = false}>Close</Button>
+      </div>
     </div>
   </div>
-</div>
 {/if}
 
 <style>
@@ -430,22 +574,115 @@
   }
 
   .about-content {
-    background: white;
-    border-radius: 8px;
-    padding: 24px;
-    margin: 0 auto;
     max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-
-  .about-content h2 {
-    color: #1976d2;
+  
+  .about-content h1 {
+    color: #800020; /* Burgundy red */
+    font-weight: 300;
+    margin-bottom: 24px;
+    font-size: 2.5rem;
+  }
+  
+  .about-section {
+    margin-bottom: 30px;
+  }
+  
+  .about-content h2, .about-section h2 {
+    color: #1976d2 !important;
+    font-size: 1.25rem;
+    margin: 0 0 1.5rem 0;
+    font-weight: 500;
+  }
+  
+  .about-section h3 {
+    color: #1976d2; /* Same blue as in other components */
+    font-size: 1.4rem;
+    margin: 20px 0 12px;
+    font-weight: 400;
+  }
+  
+  .about-section p {
+    line-height: 1.6;
+    margin-bottom: 16px;
+    color: #444;
+  }
+  
+  .about-section ul {
+    padding-left: 20px;
     margin-bottom: 16px;
   }
+  
+  .about-section li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  
+  .faq-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
 
-  .about-content p {
-    color: #757575;
+  .about-content h2, .faq-content h2 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+
+  .about-content p, .faq-content p {
     line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  
+  .faq-section {
+    margin-bottom: 30px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .faq-section h3 {
+    color: #2c3e50;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .link-section {
+    margin-bottom: 20px;
+  }
+  
+  .link-section h4 {
+    color: #3498db;
+    margin-bottom: 10px;
+  }
+  
+  .link-section a {
+    display: inline-block;
+    margin: 5px 10px 5px 0;
+    padding: 8px 15px;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+  
+  .link-section a:hover {
+    background-color: #2980b9;
+  }
+  
+  .faq-content code {
+    background-color: #f1f1f1;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-family: monospace;
   }
 
   .main-content {

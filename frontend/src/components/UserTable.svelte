@@ -132,7 +132,7 @@
 </script>
 
 <div class="user-list">
-  <h2>Users</h2>
+  <h1>Users</h1>
   {#if users.length === 0}
     <p>No users found. Create your first user above!</p>
   {:else}
@@ -239,6 +239,13 @@
   .user-list {
     margin-top: 48px;
     padding: 24px;
+  }
+
+  h1 {
+    color: #800020; /* Burgundy red */
+    margin: 0 0 20px 0;
+    font-size: 2rem;
+    font-weight: 300;
   }
 
   :global(.mdc-data-table) {

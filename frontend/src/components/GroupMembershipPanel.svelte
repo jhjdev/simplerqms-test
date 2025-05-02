@@ -135,7 +135,7 @@
 </script>
 
 <div class="membership-panel">
-  <h2>Group Membership Tools</h2>
+  <h1>Group Membership Tools</h1>
 
   <div class="panels-container">
     <!-- Membership Check Panel -->
@@ -361,11 +361,12 @@
     border-radius: 8px;
   }
 
-  h2 {
-    color: #333;
+  h1 {
+    color: #800020; /* Burgundy red */
     margin-top: 0;
     margin-bottom: 20px;
-    font-size: 1.5rem;
+    font-size: 2rem;
+    font-weight: 300;
   }
 
   .panels-container {
@@ -391,7 +392,7 @@
   .panel-header h3 {
     margin: 0;
     font-size: 1.2rem;
-    color: #4a148c;
+    color: #1976d2; /* Same blue as the 'Create a new group' button */
   }
 
   .panel-content {
