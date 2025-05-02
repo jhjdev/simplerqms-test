@@ -1,10 +1,10 @@
 import * as express from 'express';
-const groupMemberRouter = express.Router();
+const router = express.Router();
 
-import sql from '../utils/db.ts';
+import sql from '../utils/db.js';
 
 // Add a member to a group
-groupMemberRouter.post('/:groupId/members', async function (req, res, next) {
+router.post('/:groupId/members', async function (req, res, next) {
   const { groupId } = req.params;
   const { memberId, memberType } = req.body;
   const result = await sql`
@@ -16,7 +16,7 @@ groupMemberRouter.post('/:groupId/members', async function (req, res, next) {
 });
 
 // List all members of a group
-groupMemberRouter.get('/:groupId/members', async function (req, res, next) {
+router.get('/:groupId/members', async function (req, res, next) {
   const { groupId } = req.params;
   const result = await sql`
     SELECT *
@@ -27,7 +27,7 @@ groupMemberRouter.get('/:groupId/members', async function (req, res, next) {
 });
 
 // Remove a member from a group
-groupMemberRouter.delete(
+router.delete(
   '/:groupId/members/:memberId',
   async function (req, res, next) {
     const { groupId, memberId } = req.params;
@@ -39,4 +39,4 @@ groupMemberRouter.delete(
   }
 );
 
-export default groupMemberRouter;
+export default router;

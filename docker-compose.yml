@@ -1,4 +1,4 @@
-name: 'simplerqms-hiring-case'
+name: 'simplerqms-test'
 
 services:
   postgres:
@@ -9,17 +9,17 @@ services:
     environment:
       - POSTGRES_PASSWORD=PPk4nz5Zd1csikqjqnsc
       - POSTGRES_USER=backend
-      - POSTGRES_DB=hiring_case
+      - POSTGRES_DB=simplerqms_test_db
     volumes:
       - './init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql'
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U backend -d hiring_case']
+      test: ['CMD-SHELL', 'pg_isready -U backend -d simplerqms_test_db']
       interval: 3s
       timeout: 3s
       retries: 5
 
   node:
-    image: 'simplerqms-hiring-case/node:latest'
+    image: 'simplerqms-test/node:latest'
     build:
       context: './node'
       dockerfile: 'Dockerfile'
@@ -27,9 +27,8 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - './node/app.ts:/app/app.ts'
-      - './node/routes:/app/routes'
-      - './node/utils:/app/utils'
+      - './node:/app'
+      - /app/node_modules
     environment:
       - DATABASE_PASSWORD=PPk4nz5Zd1csikqjqnsc
     depends_on:
@@ -37,7 +36,7 @@ services:
         condition: 'service_healthy'
 
   # rails:
-  #   image: "simplerqms-hiring-case/rails_api:latest"
+  #   image: "simplerqms-test/rails_api:latest"
   #   build:
   #     context: "./rails_api"
   #     dockerfile: "Dockerfile"
@@ -47,14 +46,14 @@ services:
   #   volumes:
   #     - "./rails_api:/usr/src/app"
   #   environment:
-  #     - DATABASE_URL=postgresql://backend:PPk4nz5Zd1csikqjqnsc@postgres/hiring_case
+  #     - DATABASE_URL=postgresql://backend:PPk4nz5Zd1csikqjqnsc@postgres/simplerqms_test_db
   #     - RAILS_LOG_LEVEL=debug
   #   depends_on:
   #     postgres:
   #       condition: "service_healthy"
 
   # golang:
-  #   image: "simplerqms-hiring-case/golang:latest"
+  #   image: "simplerqms-test/golang:latest"
   #   build:
   #     context: "./golang"
   #     dockerfile: Dockerfile
@@ -63,21 +62,26 @@ services:
   #   volumes:
   #     - ./golang:/app
   #   environment:
-  #     - DATABASE_URL=postgresql://backend:PPk4nz5Zd1csikqjqnsc@postgres/hiring_case
+  #     - DATABASE_URL=postgresql://backend:PPk4nz5Zd1csikqjqnsc@postgres/simplerqms_test_db
   #   depends_on:
   #     postgres:
   #       condition: "service_healthy"
 
   frontend:
-    image: 'simplerqms-hiring-case/frontend:latest'
     build:
-      context: './frontend'
-      dockerfile: 'Dockerfile'
-    restart: 'always'
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: node:18
+    working_dir: /app
+    command: bash -c "npm install --legacy-peer-deps && npm run dev"
+    restart: always
     ports:
-      - '5173:5173'
+      - "5173:5173"
     volumes:
-      - './frontend/src:/app/src'
-      - './frontend/public:/app/public'
-      - './frontend/package.json:/app/package.json'
-      - './frontend/package-lock.json:/app/package-lock.json'
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_HOST=0.0.0.0
+      - VITE_PORT=5173
+      - HOST=0.0.0.0
+      - PORT=5173
