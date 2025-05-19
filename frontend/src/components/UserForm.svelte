@@ -3,7 +3,9 @@
   import Button from '@smui/button';
   import Card, { Content, Actions } from '@smui/card';
   import Textfield from '@smui/textfield';
-  import './UserForm.css';
+  import '../styles/components/UserForm.css';
+  import type { User } from '../types';
+  import { createEventDispatcher } from 'svelte';
 
   const props = $props<{
     onSubmit: (name: string, email: string) => Promise<void>;
@@ -73,18 +75,6 @@
 </Card>
 
 <style>
-  :global(.mdc-button.mdc-button--raised) {
-    height: 2.75rem !important;
-    padding: 0 2rem !important;
-    font-size: 0.95rem !important;
-    min-width: 9rem !important;
-    background-color: #1976d2 !important;
-    color: white !important;
-    border: none !important;
-  }
-
-  :global(.mdc-button.mdc-button--raised .mdc-button__label) {
-    font-size: 1rem !important;
-  }
+  /* Remove all inline styles as they are now in UserForm.css */
 </style>
 
