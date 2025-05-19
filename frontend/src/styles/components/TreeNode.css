@@ -1,0 +1,162 @@
+.tree-node {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin: var(--spacing-xs) 0;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.tree-node-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: var(--spacing-sm);
+}
+
+.label-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.node-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+}
+
+.tree-node-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.tree-node:hover .tree-node-actions {
+  opacity: 1;
+}
+
+.tree-node-children {
+  margin-left: var(--spacing-xl);
+}
+
+.indent-space {
+  width: 24px;
+}
+
+.edit-field {
+  width: 100%;
+  max-width: 300px;
+}
+
+.edit-form {
+  width: 100%;
+}
+
+.user-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background-color: var(--color-primary-light);
+  border-radius: var(--border-radius-sm);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.form-field label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.form-field input {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-md);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.save-button,
+.cancel-button,
+.edit-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.save-button {
+  background-color: var(--color-success);
+  color: var(--color-white);
+}
+
+.save-button:hover {
+  background-color: var(--color-success-dark);
+}
+
+.cancel-button {
+  background-color: var(--color-error);
+  color: var(--color-white);
+}
+
+.cancel-button:hover {
+  background-color: var(--color-error-dark);
+}
+
+.edit-button {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.edit-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* Material Icons */
+.material-icons {
+  font-size: 20px;
+  color: var(--color-text);
+}
+
+.success .material-icons {
+  color: var(--color-success);
+}
+
+.danger .material-icons {
+  color: var(--color-error);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .tree-node {
+    background-color: var(--color-background-dark);
+  }
+
+  .user-edit-field {
+    background-color: var(--color-primary-dark);
+  }
+
+  .form-field input {
+    background-color: var(--color-background-dark);
+    color: var(--color-text-light);
+  }
+} 

@@ -5,6 +5,7 @@
   import Select, { Option } from '@smui/select';
   import IconButton from '@smui/icon-button';
   import { createEventDispatcher } from 'svelte';
+  import '../styles/components/UserTable.css';
 
   export let users: User[] = [];
   export let groups: Group[] = [];
@@ -236,103 +237,5 @@
 </div>
 
 <style>
-  .user-list {
-    margin-top: 48px;
-    padding: 24px;
-  }
-
-  h1 {
-    color: #800020; /* Burgundy red */
-    margin: 0 0 20px 0;
-    font-size: 2rem;
-    font-weight: 300;
-  }
-
-  :global(.mdc-data-table) {
-    width: 100%;
-    border: 2px solid #333;
-    border-radius: 0;
-  }
-
-  :global(.mdc-data-table__table) {
-    min-width: 100%;
-    border-collapse: collapse;
-  }
-
-  :global(.mdc-data-table__header-cell) {
-    font-weight: 500;
-    color: #1976d2;
-    background-color: #f5f7fa;
-    border: 1px solid #333;
-    border-bottom: 2px solid #333;
-    padding: 16px !important;
-    height: auto !important;
-  }
-
-  :global(.mdc-data-table__row:hover) {
-    background-color: #f5f7fa;
-  }
-
-  :global(.mdc-data-table__cell) {
-    border: 1px solid #333;
-    padding: 16px !important;
-    height: auto !important;
-  }
-
-  :global(.mdc-data-table__cell button) {
-    margin-right: 8px;
-  }
-
-  .actions {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-  }
-
-  :global(.edit-button) {
-    background-color: var(--mdc-theme-primary) !important;
-    color: white !important;
-  }
-
-  :global(.delete-button) {
-    background-color: #dc3545 !important;
-    color: white !important;
-  }
-
-  :global(.mdc-button--raised) {
-    min-width: 40px !important;
-    width: auto !important;
-    padding: 0 8px !important;
-  }
-
-  .edit-input {
-    width: 100%;
-    padding: 4px 8px;
-    border: 1px solid #1976d2;
-    border-radius: 4px;
-  }
-  :global(.edit-button) {
-    --mdc-theme-primary: #1976d2;
-  }
-
-  :global(.delete-button) {
-    --mdc-theme-primary: #d32f2f;
-  }
-
-  :global(.save-button) {
-    --mdc-theme-primary: #2e7d32;
-  }
-
-  :global(.cancel-button) {
-    --mdc-theme-primary: #757575;
-  }
-
-  select.group-select {
-    width: 100%;
-    min-width: 150px;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: white;
-  }
+  /* Remove all inline styles as they are now in UserTable.css */
 </style>

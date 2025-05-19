@@ -1,0 +1,100 @@
+.user-list {
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-lg);
+}
+
+h1 {
+  color: var(--color-primary);
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: var(--font-size-2xl);
+  font-weight: 300;
+}
+
+:global(.mdc-data-table) {
+  width: 100%;
+  border: 2px solid var(--color-text);
+  border-radius: 0;
+}
+
+:global(.mdc-data-table__table) {
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+:global(.mdc-data-table__header-cell) {
+  font-weight: 500;
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
+  border: 1px solid var(--color-text);
+  border-bottom: 2px solid var(--color-text);
+  padding: var(--spacing-md) !important;
+  height: auto !important;
+}
+
+:global(.mdc-data-table__row:hover) {
+  background-color: var(--color-primary-light);
+}
+
+:global(.mdc-data-table__cell) {
+  border: 1px solid var(--color-text);
+  padding: var(--spacing-md) !important;
+  height: auto !important;
+}
+
+:global(.mdc-data-table__cell button) {
+  margin-right: var(--spacing-sm);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  justify-content: flex-end;
+}
+
+:global(.edit-button) {
+  background-color: var(--color-primary) !important;
+  color: var(--color-white) !important;
+}
+
+:global(.delete-button) {
+  background-color: var(--color-error) !important;
+  color: var(--color-white) !important;
+}
+
+:global(.mdc-button--raised) {
+  min-width: 40px !important;
+  width: auto !important;
+  padding: 0 var(--spacing-sm) !important;
+}
+
+.edit-input {
+  width: 100%;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--border-radius-sm);
+}
+
+:global(.edit-button) {
+  --mdc-theme-primary: var(--color-primary);
+}
+
+:global(.delete-button) {
+  --mdc-theme-primary: var(--color-error);
+}
+
+:global(.save-button) {
+  --mdc-theme-primary: var(--color-success);
+}
+
+:global(.cancel-button) {
+  --mdc-theme-primary: var(--color-text-light);
+}
+
+select.group-select {
+  width: 100%;
+  min-width: 150px;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--color-white);
+} 
