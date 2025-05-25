@@ -243,6 +243,41 @@ Response:
 3. Access the API at http://localhost:3000
 4. Access the frontend at http://localhost:5173
 
+### Data Persistence
+
+By default, the application runs with a fresh database on each container restart. This means that any data you create (users, groups, etc.) will be reset when you restart the containers. This is useful for development and testing purposes.
+
+If you want to persist your data between container restarts, you can enable data persistence by:
+
+1. Opening `docker-compose.yml`
+2. Uncommenting these two sections:
+
+   ```yaml
+   # In the postgres service:
+   - 'postgres_data:/var/lib/postgresql/data'
+
+   # At the bottom of the file:
+   volumes:
+     postgres_data:
+   ```
+
+3. Restart your containers with:
+   ```bash
+   docker compose down
+   docker compose up
+   ```
+
+To switch back to non-persistent mode:
+
+1. Comment out the same sections in `docker-compose.yml`
+2. Remove the volume:
+   ```bash
+   docker volume rm simplerqms-test_postgres_data
+   ```
+3. Restart your containers
+
+Note: The initial data (test user and test group) will always be created when the database is initialized, regardless of whether persistence is enabled or not.
+
 ## Frontend Features
 
 - **User Management**: Create, edit, and delete users

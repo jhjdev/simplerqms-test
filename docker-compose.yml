@@ -12,6 +12,8 @@ services:
       - POSTGRES_DB=simplerqms_test_db
     volumes:
       - './init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql'
+      # Uncomment the following line to enable data persistence between container restarts
+      # - 'postgres_data:/var/lib/postgresql/data'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U backend -d simplerqms_test_db']
       interval: 3s
@@ -76,7 +78,7 @@ services:
     command: bash -c "npm install --legacy-peer-deps && npm run dev"
     restart: always
     ports:
-      - "5173:5173"
+      - '5173:5173'
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -85,3 +87,6 @@ services:
       - VITE_PORT=5173
       - HOST=0.0.0.0
       - PORT=5173
+# Uncomment this section to enable data persistence
+# volumes:
+#   postgres_data:
