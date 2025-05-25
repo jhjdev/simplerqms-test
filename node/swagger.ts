@@ -1,15 +1,21 @@
-import swaggerJsdoc from 'swagger-jsdoc';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { glob } from 'glob';
+import type { Options } from 'swagger-jsdoc';
 
-const options = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const options: Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'SimplerQMS API',
+      title: 'Simpler QMS API',
       version: '1.0.0',
-      description: 'API for SimplerQMS User and Group Management System',
+      description: 'API documentation for Simple RQMS',
       contact: {
         name: 'API Support',
-        email: 'support@simplerqms.com',
+        email: 'support@example.com',
       },
     },
     servers: [
@@ -22,124 +28,71 @@ const options = {
       schemas: {
         User: {
           type: 'object',
-          required: ['name', 'email'],
           properties: {
-            id: {
-              type: 'integer',
-              description: 'User ID',
-            },
-            name: {
-              type: 'string',
-              description: 'User name',
-            },
-            email: {
-              type: 'string',
-              description: 'User email',
-            },
-            type: {
-              type: 'string',
-              description: 'User type',
-              enum: ['admin', 'regular'],
-            },
+            id: { type: 'integer' },
+            name: { type: 'string' },
+            email: { type: 'string', format: 'email' },
+            groupId: { type: 'integer', nullable: true },
           },
         },
         Group: {
           type: 'object',
-          required: ['name'],
           properties: {
-            id: {
-              type: 'integer',
-              description: 'Group ID',
-            },
-            name: {
-              type: 'string',
-              description: 'Group name',
-            },
-            parent_id: {
-              type: 'integer',
-              nullable: true,
-              description: 'Parent group ID',
-            },
+            id: { type: 'integer' },
+            name: { type: 'string' },
+            parentId: { type: 'integer', nullable: true },
           },
         },
         GroupMember: {
           type: 'object',
-          required: ['group_id', 'member_id', 'member_type'],
           properties: {
-            id: {
-              type: 'integer',
-              description: 'Group member ID',
-            },
-            group_id: {
-              type: 'integer',
-              description: 'Group ID',
-            },
-            member_id: {
-              type: 'integer',
-              description: 'Member ID (user or group)',
-            },
-            member_type: {
-              type: 'string',
-              description: 'Member type',
-              enum: ['user', 'group'],
-            },
+            groupId: { type: 'integer' },
+            userId: { type: 'integer' },
           },
         },
         MembershipCheck: {
           type: 'object',
-          required: ['memberId', 'memberType'],
           properties: {
-            memberId: {
-              type: 'integer',
-              description: 'Member ID (user or group)',
-            },
-            memberType: {
-              type: 'string',
-              description: 'Member type',
-              enum: ['user', 'group'],
-            },
+            userId: { type: 'integer' },
+            groupId: { type: 'integer' },
           },
         },
         MembershipResult: {
           type: 'object',
           properties: {
-            isMember: {
-              type: 'boolean',
-              description: 'Whether the member is in the group hierarchy',
-            },
+            isMember: { type: 'boolean' },
           },
         },
         Member: {
           type: 'object',
           properties: {
-            id: {
-              type: 'integer',
-              description: 'Member ID',
-            },
-            name: {
-              type: 'string',
-              description: 'Member name',
-            },
-            type: {
-              type: 'string',
-              description: 'Member type',
-              enum: ['user', 'group'],
-            },
+            id: { type: 'integer' },
+            name: { type: 'string' },
+            email: { type: 'string', format: 'email' },
           },
         },
         Error: {
           type: 'object',
           properties: {
-            message: {
-              type: 'string',
-              description: 'Error message',
-            },
+            error: { type: 'string' },
           },
         },
       },
     },
   },
-  apis: ['./routes/*.ts', './routes/*.swagger.ts'], // Path to the API routes and their Swagger docs
+  apis: [], // We'll populate this dynamically
 };
 
-export const specs = swaggerJsdoc(options);
+export async function getSpecs() {
+  try {
+    // Find all swagger files
+    const swaggerFiles = await glob('**/*.swagger.ts', { cwd: __dirname });
+    options.apis = swaggerFiles.map((file: string) => join(__dirname, file));
+
+    const swaggerJsdoc = await import('swagger-jsdoc');
+    return swaggerJsdoc.default(options);
+  } catch (error) {
+    console.error('Failed to load swagger-jsdoc:', error);
+    return {};
+  }
+}
