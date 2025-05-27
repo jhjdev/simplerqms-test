@@ -56,12 +56,13 @@ nav a {
 }
 
 nav a:hover {
-  color: var(--color-secondary);
+  color: var(--color-tertiary);
 }
 
 nav a.active {
-  color: var(--color-secondary);
-  border-bottom: 2px solid var(--color-primary);
+  color: var(--color-tertiary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-tertiary-dark);
 }
 
 .main-content {

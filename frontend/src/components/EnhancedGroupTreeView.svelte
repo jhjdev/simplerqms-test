@@ -181,40 +181,45 @@
   }
 
   function toggleExpand(groupId: string) {
-    if (expandedGroups.has(groupId)) {
-      expandedGroups.delete(groupId);
+    const newExpandedGroups = new Set(expandedGroups);
+    if (newExpandedGroups.has(groupId)) {
+      newExpandedGroups.delete(groupId);
     } else {
-      expandedGroups.add(groupId);
+      newExpandedGroups.add(groupId);
     }
-    expandedGroups = expandedGroups; // Trigger reactivity
+    expandedGroups = newExpandedGroups;
   }
 
   function toggleMemberCount() {
     showMemberCount = !showMemberCount;
+    console.log('Member count visibility:', showMemberCount); // Debug log
   }
 
   function expandAll() {
-    groups.forEach(group => expandedGroups.add(group.id));
-    expandedGroups = expandedGroups; // Trigger reactivity
+    const newExpandedGroups = new Set<string>();
+    groups.forEach(group => {
+      newExpandedGroups.add(group.id);
+    });
+    expandedGroups = newExpandedGroups;
   }
 
   function collapseAll() {
-    expandedGroups.clear();
-    expandedGroups = expandedGroups; // Trigger reactivity
+    expandedGroups = new Set<string>();
   }
 
   // Initialize with all root groups expanded
   onMount(() => {
+    const initialExpandedGroups = new Set<string>();
     groups
       .filter(g => !g.parent_id)
-      .forEach(g => expandedGroups.add(g.id));
-    expandedGroups = expandedGroups; // Trigger reactivity
+      .forEach(g => initialExpandedGroups.add(g.id));
+    expandedGroups = initialExpandedGroups;
   });
 </script>
 
 <div class="group-list" class:loading={isLoading}>
   <div class="header">
-    <h1>Groups</h1>
+    <h2>Groups</h2>
     <div class="controls">
       <button class="control-btn" on:click={expandAll}>Expand All</button>
       <button class="control-btn" on:click={collapseAll}>Collapse All</button>
@@ -269,7 +274,3 @@
     </div>
   {/if}
 </div>
-
-<style>
-  /* Remove all inline styles as they are now in EnhancedGroupTreeView.css */
-</style>

@@ -18,6 +18,8 @@
   --color-primary: #b71c1c;
   --color-primary-light: #f5f7fa;
   --color-secondary: #2e7d32;
+  --color-tertiary: #1976d2;
+  --color-tertiary-dark: #1565c0;
   --color-text: #333;
   --color-text-light: #757575;
   --color-border: #e0e0e0;
@@ -48,6 +50,7 @@
   --font-size-lg: 1.25rem;
   --font-size-xl: 1.4rem;
   --font-size-2xl: 2.5rem;
+  --font-size-h2: 1.8rem;
 }
 
 /* Reset and base styles */
@@ -95,24 +98,55 @@ h1 {
 }
 
 h2 {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-h2);
   color: var(--color-text);
+  font-weight: 300;
 }
 
 h3 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   color: var(--color-text);
 }
 
 /* Links */
 a {
-  color: var(--color-text-light);
+  color: var(--color-tertiary);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 a:hover {
-  color: var(--color-secondary);
+  color: var(--color-tertiary-dark);
+}
+
+/* Navigation links */
+nav a {
+  color: var(--color-tertiary);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: color 0.2s;
+}
+
+nav a:hover {
+  color: var(--color-tertiary-dark);
+}
+
+nav a.active {
+  color: var(--color-tertiary-dark);
+  font-weight: 600;
+}
+
+/* Form buttons */
+.form-button {
+  background-color: var(--color-tertiary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s;
+}
+
+.form-button:hover {
+  background-color: var(--color-tertiary-dark);
 }
 
 /* Buttons */
@@ -137,6 +171,28 @@ li {
 /* SMUI overrides */
 :global(.mdc-text-field) {
   font-family: var(--mdc-typography-font-family) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: none !important;
+}
+
+:global(.mdc-text-field__input) {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: none !important;
+}
+
+:global(.mdc-text-field--outlined) {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: none !important;
+}
+
+:global(.mdc-notched-outline) {
+  display: none !important;
 }
 
 :global(.mdc-button) {

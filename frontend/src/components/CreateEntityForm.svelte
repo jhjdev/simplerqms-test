@@ -118,43 +118,46 @@
 
         <form on:submit={handleGroupSubmit} class="form-fields">
           <div class="fields-wrapper">
-            <span>Group Name:</span>
             <div class="form-field">
               <div class="textfield-wrapper">
+                <span class="field-label">Enter group name</span>
                 <Textfield
                   bind:value={groupName}
                   required
                   disabled={isLoading}
-                  label="Group name"
-                  input$placeholder=" "
                   class="text-field"
                 />
               </div>
             </div>
             
-            <span>Parent Group:</span>
             <div class="form-field">
-              <Select
-                bind:value={parentId}
-                disabled={isLoading}
-                class="select-field"
-              >
-                <Option value="">None</Option>
-                {#each groups as group}
-                  <Option value={group.id}>{group.name}</Option>
-                {/each}
-              </Select>
+              <div class="select-wrapper">
+                <span class="field-label">Parent Group</span>
+                <Select
+                  bind:value={parentId}
+                  disabled={isLoading}
+                  class="select-field"
+                >
+                  <Option value="">None</Option>
+                  {#each groups as group}
+                    <Option value={group.id}>{group.name}</Option>
+                  {/each}
+                </Select>
+              </div>
             </div>
           </div>
 
-          <Button 
-            variant="raised"
-            type="submit"
-            disabled={isLoading || !groupName.trim()}
-            class="submit-button mdc-button--raised"
-          >
-            {isLoading ? 'Creating...' : 'Create Group'}
-          </Button>
+          <div class="button-container">
+            <Button 
+              variant="raised"
+              type="submit"
+              disabled={isLoading || !groupName.trim()}
+              class="submit-button mdc-button--raised"
+              style="background-color: var(--color-tertiary); color: white;"
+            >
+              {isLoading ? 'Creating...' : 'Create Group'}
+            </Button>
+          </div>
         </form>
       </div>
 
@@ -167,38 +170,34 @@
 
         <form on:submit={handleUserSubmit} class="form-fields">
           <div class="fields-wrapper">
-            <span>Full Name:</span>
             <div class="form-field">
               <div class="textfield-wrapper">
+                <span class="field-label">Enter full name</span>
                 <Textfield 
                   bind:value={userName}
                   required
                   disabled={isLoading}
-                  label="Full name"
-                  input$placeholder=" "
                   class="text-field"
                 />
               </div>
             </div>
 
-            <span>Email Address:</span>
             <div class="form-field">
               <div class="textfield-wrapper">
+                <span class="field-label">Enter email address</span>
                 <Textfield 
                   bind:value={userEmail}
                   type="email"
                   required
                   disabled={isLoading}
-                  label="Email address"
-                  input$placeholder=" "
                   class="text-field"
                 />
               </div>
             </div>
 
-            <span>Assign to Group:</span>
             <div class="form-field">
               <div class="select-wrapper">
+                <span class="field-label">Assign to Group</span>
                 <Select
                   bind:value={userGroupId}
                   disabled={isLoading}
@@ -213,14 +212,17 @@
             </div>
           </div>
 
-          <Button 
-            variant="raised"
-            type="submit"
-            disabled={isLoading || !userName.trim() || !userEmail.trim()}
-            class="submit-button mdc-button--raised"
-          >
-            {isLoading ? 'Creating...' : 'Create User'}
-          </Button>
+          <div class="button-container">
+            <Button 
+              variant="raised"
+              type="submit"
+              disabled={isLoading}
+              class="submit-button mdc-button--raised"
+              style="background-color: var(--color-tertiary); color: white;"
+            >
+              {isLoading ? 'Creating...' : 'Create User'}
+            </Button>
+          </div>
         </form>
       </div>
     </div>
