@@ -22,6 +22,12 @@
   let isLoading: boolean = false;
   let showMemberCount: boolean = true;
 
+  // User editing state
+  let editingUserId: string | null = null;
+  let editingUserName: string = '';
+  let editingUserEmail: string = '';
+  let editingUserGroupId: string | null = null;
+
   // Function to count all members (users and groups) within a group hierarchy
   function countAllMembers(groupId: string): number {
     const directUsers = users.filter(u => u.group_id === groupId).length;
@@ -41,11 +47,16 @@
   // Filter groups based on search term
   $: {
     if (searchTerm.trim() === '') {
-      filteredGroups = [...groups];
+      // Only show root groups (groups without parent_id)
+      filteredGroups = groups.filter(g => !g.parent_id);
+      console.log('Root groups:', filteredGroups.map(g => ({ id: g.id, name: g.name, parent_id: g.parent_id })));
     } else {
       const term = searchTerm.toLowerCase();
       // Filter groups that match the search term
       filteredGroups = groups.filter(group => {
+        // Only include root groups in the main view
+        if (group.parent_id) return false;
+        
         // Check if the group name matches
         if (group.name.toLowerCase().includes(term)) return true;
         
@@ -63,6 +74,20 @@
     }
   }
 
+  // Add a function to check if a group is a valid root group
+  function isValidRootGroup(group: Group): boolean {
+    return !group.parent_id;
+  }
+
+  // Add a function to check if a group should be rendered
+  function shouldRenderGroup(group: Group): boolean {
+    // For root groups, always render
+    if (!group.parent_id) return true;
+    
+    // For child groups, only render if their parent exists
+    return groups.some(g => g.id === group.parent_id);
+  }
+
   function handleEdit(group: Group): void {
     editingGroupId = group.id;
     editingGroupName = group.name;
@@ -76,6 +101,33 @@
   function handleUserEdit(event: CustomEvent<{ userId: string; name: string; email: string; groupId: string | null }>) {
     // Forward the user edit event to the parent component
     dispatch('userEdit', event.detail);
+  }
+
+  function handleEditUser(user: User): void {
+    editingUserId = user.id;
+    editingUserName = user.name;
+    editingUserEmail = user.email;
+    editingUserGroupId = user.group_id || null;
+  }
+
+  function handleCancelUserEdit(): void {
+    editingUserId = null;
+  }
+
+  async function handleSaveUser(user: User): Promise<void> {
+    if (editingUserName && editingUserEmail) {
+      try {
+        dispatch('userEdit', {
+          userId: user.id,
+          name: editingUserName,
+          email: editingUserEmail,
+          groupId: editingUserGroupId
+        });
+        editingUserId = null;
+      } catch (error) {
+        console.error('Error saving user:', error);
+      }
+    }
   }
 
   async function handleSave(group: Group): Promise<void> {
@@ -186,66 +238,23 @@
   
   <div class="tree-view">
     {#if filteredGroups && filteredGroups.length > 0}
-      {#each filteredGroups.filter(g => !g.parent_id) as group (group.id)}
-        <div class="group-item" transition:fade={{ duration: 200 }}>
-          <div class="group-header">
-            <button 
-              class="expand-btn" 
-              on:click={() => toggleExpand(group.id)}
-              aria-label={expandedGroups.has(group.id) ? 'Collapse group' : 'Expand group'}
-            >
-              <span class="expand-icon">{expandedGroups.has(group.id) ? '▼' : '▶'}</span>
-            </button>
-            
-            <div class="group-name">
-              {#if editingGroupId === group.id}
-                <input 
-                  type="text" 
-                  bind:value={editingGroupName} 
-                  on:keydown={(e) => e.key === 'Enter' && handleSave(group)}
-                />
-                <div class="edit-actions">
-                  <button class="save-btn" on:click={() => handleSave(group)}>Save</button>
-                  <button class="cancel-btn" on:click={handleCancel}>Cancel</button>
-                </div>
-              {:else}
-                <span class="name">{group.name}</span>
-                {#if showMemberCount}
-                  <span class="member-count" title="Total members in this group">
-                    {countAllMembers(group.id)}
-                  </span>
-                {/if}
-                <div class="actions">
-                  <button class="edit-btn" on:click={() => handleEdit(group)}>Edit</button>
-                  <button class="delete-btn" on:click={() => handleDelete(group)}>Delete</button>
-                </div>
-              {/if}
-            </div>
-          </div>
-          
-          {#if expandedGroups.has(group.id)}
-            <div class="group-children" transition:slide={{ duration: 200 }}>
-              <TreeNode
-                group={{
-                  ...group,
-                  children: groups.filter(g => g.parent_id === group.id),
-                  users: users.filter(u => u.group_id === group.id)
-                }}
-                editingGroupId={editingGroupId}
-                editingGroupName={editingGroupName}
-                handleEdit={handleEdit}
-                handleSave={handleSave}
-                handleDelete={handleDelete}
-                handleCancel={handleCancel}
-                expandedGroups={expandedGroups}
-                toggleExpand={toggleExpand}
-                showMemberCount={showMemberCount}
-                countAllMembers={countAllMembers}
-                on:userEdit={handleUserEdit}
-              />
-            </div>
-          {/if}
-        </div>
+      {#each filteredGroups.filter(isValidRootGroup) as group (group.id)}
+        <TreeNode
+          group={group}
+          editingGroupId={editingGroupId}
+          editingGroupName={editingGroupName}
+          handleEdit={handleEdit}
+          handleSave={handleSave}
+          handleDelete={handleDelete}
+          handleCancel={handleCancel}
+          expandedGroups={expandedGroups}
+          toggleExpand={toggleExpand}
+          showMemberCount={showMemberCount}
+          countAllMembers={countAllMembers}
+          groups={groups}
+          users={users}
+          on:userEdit={handleUserEdit}
+        />
       {/each}
     {:else if searchTerm.trim() !== ''}
       <p class="no-results">No groups match your search</p>
