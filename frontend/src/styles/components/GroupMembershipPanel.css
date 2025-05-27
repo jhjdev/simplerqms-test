@@ -71,8 +71,13 @@ h1 {
 }
 
 .form-actions {
-  margin-top: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+  display: flex;
+  justify-content: flex-start;
+  margin-top: var(--spacing-md);
+}
+
+.form-actions button {
+  min-width: 200px;
 }
 
 .error-message {

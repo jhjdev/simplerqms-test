@@ -133,107 +133,109 @@
 </script>
 
 <div class="user-list">
-  <h1>Users</h1>
-  {#if users.length === 0}
-    <p>No users found. Create your first user above!</p>
-  {:else}
-    <div class="table-section">
-      <DataTable class="user-table">
-        <Head>
-          <Row>
-            <Cell>Name</Cell>
-            <Cell>Email</Cell>
-            <Cell>Group</Cell>
-            <Cell class="actions-header">Actions</Cell>
-          </Row>
-        </Head>
-        <Body>
-          {#each users as user}
+  <div class="user-table-container">
+    <h2>Users</h2>
+    {#if users.length === 0}
+      <p>No users found. Create your first user above!</p>
+    {:else}
+      <div class="table-section">
+        <DataTable class="user-table">
+          <Head>
             <Row>
-              <Cell>
-                {#if editingUserId === user.id}
-                  <input
-                    type="text"
-                    bind:value={editName}
-                    class="edit-input"
-                    on:keydown|preventDefault={(e) => {
-                      if (e.key === 'Enter') saveEditApi(user);
-                    }}
-                  />
-                {:else}
-                  {user.name}
-                {/if}
-              </Cell>
-              <Cell>
-                {#if editingUserId === user.id}
-                  <input
-                    type="email"
-                    bind:value={editEmail}
-                    class="edit-input"
-                    on:keydown|preventDefault={(e) => {
-                      if (e.key === 'Enter') saveEditApi(user);
-                    }}
-                  />
-                {:else}
-                  {user.email}
-                {/if}
-              </Cell>
-              <Cell>
-                {#if editingUserId === user.id}
-                  <select
-                    bind:value={editGroupId}
-                    class="group-select"
-                  >
-                    <option value={null}>None</option>
-                    {#each groups as group}
-                      <option value={group.id}>{group.name}</option>
-                    {/each}
-                  </select>
-                {:else}
-                  {getUserGroup(user.id)?.name || 'None'}
-                {/if}
-              </Cell>
-              <Cell class="actions-cell">
-                <div class="actions">
-                  {#if editingUserId === user.id}
-                    <Button
-                      variant="raised"
-                      on:click={() => handleSave(user)}
-                      class="edit-button mdc-button--raised"
-                    >
-                      <i class="material-icons">save</i>
-                    </Button>
-                    <Button
-                      variant="raised"
-                      on:click={handleCancel}
-                      class="delete-button mdc-button--raised"
-                    >
-                      <i class="material-icons">close</i>
-                    </Button>
-                  {:else}
-                    <Button
-                      variant="raised"
-                      on:click={() => startEdit(user)}
-                      class="edit-button mdc-button--raised"
-                    >
-                      <i class="material-icons">edit</i>
-                    </Button>
-                    <Button
-                      variant="raised"
-                      on:click={() => handleDelete(user)}
-                      class="delete-button mdc-button--raised"
-                    >
-                      <i class="material-icons">delete</i>
-                    </Button>
-                  {/if}
-                </div>
-              </Cell>
+              <Cell>Name</Cell>
+              <Cell>Email</Cell>
+              <Cell>Group</Cell>
+              <Cell class="actions-header">Actions</Cell>
             </Row>
-          {/each}
-        </Body>
-      </DataTable>
-    </div>
-  {/if}
+          </Head>
+          <Body>
+            {#each users as user}
+              <Row>
+                <Cell>
+                  {#if editingUserId === user.id}
+                    <input
+                      type="text"
+                      bind:value={editName}
+                      class="edit-input"
+                      on:keydown|preventDefault={(e) => {
+                        if (e.key === 'Enter') saveEditApi(user);
+                      }}
+                    />
+                  {:else}
+                    {user.name}
+                  {/if}
+                </Cell>
+                <Cell>
+                  {#if editingUserId === user.id}
+                    <input
+                      type="email"
+                      bind:value={editEmail}
+                      class="edit-input"
+                      on:keydown|preventDefault={(e) => {
+                        if (e.key === 'Enter') saveEditApi(user);
+                      }}
+                    />
+                  {:else}
+                    {user.email}
+                  {/if}
+                </Cell>
+                <Cell>
+                  {#if editingUserId === user.id}
+                    <select
+                      bind:value={editGroupId}
+                      class="group-select"
+                    >
+                      <option value={null}>None</option>
+                      {#each groups as group}
+                        <option value={group.id}>{group.name}</option>
+                      {/each}
+                    </select>
+                  {:else}
+                    {getUserGroup(user.id)?.name || 'None'}
+                  {/if}
+                </Cell>
+                <Cell class="actions-cell">
+                  <div class="actions">
+                    {#if editingUserId === user.id}
+                      <Button
+                        variant="raised"
+                        on:click={() => handleSave(user)}
+                        class="edit-button mdc-button--raised"
+                      >
+                        <i class="material-icons">save</i>
+                      </Button>
+                      <Button
+                        variant="raised"
+                        on:click={handleCancel}
+                        class="delete-button mdc-button--raised"
+                      >
+                        <i class="material-icons">close</i>
+                      </Button>
+                    {:else}
+                      <Button
+                        variant="raised"
+                        on:click={() => startEdit(user)}
+                        class="edit-button mdc-button--raised"
+                      >
+                        <i class="material-icons">edit</i>
+                      </Button>
+                      <Button
+                        variant="raised"
+                        on:click={() => handleDelete(user)}
+                        class="delete-button mdc-button--raised"
+                      >
+                        <i class="material-icons">delete</i>
+                      </Button>
+                    {/if}
+                  </div>
+                </Cell>
+              </Row>
+            {/each}
+          </Body>
+        </DataTable>
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>

@@ -35,10 +35,11 @@
     groupUpdated: void;
   }>();
 
-  let isExpanded = true;
+  // Remove the local isExpanded state and use expandedGroups directly
+  $: isExpanded = expandedGroups.has(group.id);
 
   function toggleNodeExpand() {
-    isExpanded = !isExpanded;
+    toggleExpand(group.id);
   }
 
   function hasChildren(group: Group): boolean {
@@ -168,6 +169,11 @@
         <span class="node-label">
           <span class="material-icons">folder</span>
           {group.name} (Group)
+          {#if showMemberCount}
+            <span class="member-count" title="Total members in this group">
+              ({countAllMembers(group.id)})
+            </span>
+          {/if}
         </span>
       {/if}
     </div>
@@ -276,141 +282,5 @@
 {/if}
 
 <style>
-  .tree-node {
-    position: relative;
-    margin: 0;
-    padding: 0;
-  }
-
-  .tree-node-children {
-    position: relative;
-    margin-left: 1.5rem;
-    padding-left: 0.5rem;
-    border-left: 1px solid #e0e0e0;
-  }
-
-  .tree-node-content {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem 0;
-    min-height: 2.5rem;
-  }
-
-  .indent-space {
-    width: 1.5rem;
-    display: inline-block;
-  }
-
-  .label-container {
-    flex: 1;
-    display: flex;
-    align-items: center;
-  }
-
-  .node-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .material-icons {
-    font-size: 1.2rem;
-    color: #666;
-  }
-
-  .tree-node-actions {
-    display: flex;
-    gap: 0.25rem;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-
-  .tree-node:hover .tree-node-actions {
-    opacity: 1;
-  }
-
-  .edit-form {
-    width: 100%;
-  }
-
-  .edit-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .user-edit-field {
-    padding: 0.5rem;
-    background: #f5f5f5;
-    border-radius: 4px;
-  }
-
-  .form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .form-field label {
-    font-size: 0.875rem;
-    color: #666;
-  }
-
-  .form-field input {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-
-  .form-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  .save-button,
-  .cancel-button {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-
-  .save-button {
-    background-color: #4CAF50;
-    color: white;
-  }
-
-  .cancel-button {
-    background-color: #f44336;
-    color: white;
-  }
-
-  .save-button:hover {
-    background-color: #45a049;
-  }
-
-  .cancel-button:hover {
-    background-color: #da190b;
-  }
-
-  .edit-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.25rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    color: #666;
-    transition: color 0.2s ease;
-  }
-
-  .edit-button:hover {
-    color: #333;
-  }
+  /* Styles moved to TreeNode.css */
 </style>

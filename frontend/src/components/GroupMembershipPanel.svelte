@@ -136,7 +136,7 @@
 </script>
 
 <div class="membership-panel">
-  <h1>Group Membership Tools</h1>
+  <h2>Group Membership Tools</h2>
 
   <div class="panels-container">
     <!-- Membership Check Panel -->
@@ -193,6 +193,8 @@
             variant="raised" 
             on:click={checkMembership} 
             disabled={isCheckingMembership || !selectedGroupId || !selectedMemberId}
+            class="mdc-button--raised"
+            style="background-color: var(--color-tertiary); color: white;"
           >
             {isCheckingMembership ? 'Checking...' : 'Check Membership'}
           </Button>
@@ -254,6 +256,8 @@
             variant="raised" 
             on:click={getAllMembers} 
             disabled={isLoadingMembers || !selectedGroupForMembers}
+            class="mdc-button--raised"
+            style="background-color: var(--color-tertiary); color: white;"
           >
             {isLoadingMembers ? 'Loading...' : 'Get All Members'}
           </Button>

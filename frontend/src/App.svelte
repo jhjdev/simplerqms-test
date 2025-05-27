@@ -1,6 +1,5 @@
 <script lang="ts">
   import UserTable from "./components/UserTable.svelte";
-  import GroupTreeView from "./components/GroupTreeView.svelte";
   import EnhancedGroupTreeView from "./components/EnhancedGroupTreeView.svelte";
   import CreateEntityForm from "./components/CreateEntityForm.svelte";
   import GroupMembershipPanel from "./components/GroupMembershipPanel.svelte";
@@ -285,7 +284,7 @@
   <header>
     <div class="header-content">
       <h1>Simpler QMS</h1>
-      <p class="subtitle">Requirements Management System</p>
+      <h3 class="subtitle">Requirements Management System</h3>
     </div>
   </header>
 
@@ -353,7 +352,7 @@
       </div>
     {:else if currentPage === 'about'}
       <div class="about-content">
-        <h1>SimplerQMS User and Group Management System</h1>
+        <h2>SimplerQMS User and Group Management System</h2>
         
         <div class="about-section">
           <h2>About This Project</h2>
@@ -502,5 +501,9 @@
 {/if}
 
 <style>
-  /* Remove all inline styles as they are now in App.css */
+  .subtitle {
+    color: var(--color-secondary);
+    margin: 0;
+    font-weight: 300;
+  }
 </style>
