@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
+import { setupSwagger } from './swagger-setup.js';
 
 import indexRouter from './routes/index.js';
 import usersRouter from './routes/users.js';
@@ -16,11 +17,16 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(cors({
-  origin: '*', // Allow all origins for development
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type']
-}));
+app.use(
+  cors({
+    origin: '*', // Allow all origins for development
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+  })
+);
+
+// Initialize Swagger documentation
+setupSwagger(app);
 
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
@@ -28,16 +34,22 @@ app.use('/api/groups', groupRouter);
 app.use('/api/groups', groupMemberRouter);
 app.use('/api/groups', groupHierarchyRouter);
 
-// Swagger documentation temporarily disabled
-// Uncomment when ESM compatibility issues are resolved
-
 // catch 404 and forward to error handler
-app.use(function (req: express.Request, res: express.Response, next: express.NextFunction) {
+app.use(function (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
   next(createError(404));
 });
 
 // error handler
-app.use(function (err: any, req: express.Request, res: express.Response, next: express.NextFunction) {
+app.use(function (
+  err: any,
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};

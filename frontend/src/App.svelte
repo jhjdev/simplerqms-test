@@ -296,7 +296,7 @@
           class:active={currentPage === 'home'}
           on:click|preventDefault={() => navigate('home')}
         >
-          Home
+          HOME
         </a>
       </li>
       <li>
@@ -305,7 +305,7 @@
           class:active={currentPage === 'about'}
           on:click|preventDefault={() => navigate('about')}
         >
-          About
+          ABOUT
         </a>
       </li>
       <li>
@@ -315,6 +315,15 @@
           on:click|preventDefault={() => navigate('faq')}
         >
           FAQ
+        </a>
+      </li>
+      <li>
+        <a 
+          href="http://localhost:3000/api-docs" 
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          API DOCS
         </a>
       </li>
     </ul>

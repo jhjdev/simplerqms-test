@@ -95,17 +95,20 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
   font-size: var(--font-size-2xl);
   color: var(--color-primary);
+  text-transform: uppercase;
 }
 
 h2 {
   font-size: var(--font-size-h2);
   color: var(--color-text);
   font-weight: 300;
+  text-transform: uppercase;
 }
 
 h3 {
   font-size: var(--font-size-lg);
   color: var(--color-text);
+  text-transform: uppercase;
 }
 
 /* Links */

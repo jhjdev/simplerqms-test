@@ -90,10 +90,10 @@ h2 {
 
 .button-container {
   position: absolute;
-  bottom: 0;
-  left: 0;
+  bottom: 20px;
+  left: var(--spacing-md);
   display: flex;
-  justify-content: flex-start;
+  gap: var(--spacing-md);
 }
 
 .submit-button {
