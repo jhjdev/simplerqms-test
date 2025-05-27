@@ -204,8 +204,8 @@
           <div class="error-message">{membershipError}</div>
         {/if}
 
-        {#if membershipResult}
-          <div class="result-container">
+        <div class="result-container">
+          {#if membershipResult}
             <div class="result-paper">
               <h4>Result:</h4>
               <p class="membership-status {membershipResult.isMember ? 'is-member' : 'not-member'}">
@@ -227,8 +227,8 @@
                 </div>
               {/if}
             </div>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
     </div>
 
@@ -267,58 +267,39 @@
           <div class="error-message">{membersError}</div>
         {/if}
 
-        {#if allMembersResult}
-          <div class="result-container">
+        <div class="result-container">
+          {#if allMembersResult}
             <div class="result-paper">
-              <h4>Members in Hierarchy:</h4>
-              
+              <h4>Members:</h4>
               {#if allMembersResult.users && allMembersResult.users.length > 0}
                 <div class="members-section">
-                  <h5>Users ({allMembersResult.users.length}):</h5>
+                  <h5>Users:</h5>
                   <ul class="members-list">
                     {#each allMembersResult.users as user}
-                      <li>
-                        <div class="member-item">
-                          <span class="member-name">{user.name}</span>
-                          <span class="member-email">{user.email}</span>
-                          {#if user.path && user.path.length > 0}
-                            <div class="member-path">
-                              Path: {user.path.join(' → ')}
-                            </div>
-                          {/if}
-                        </div>
+                      <li class="member-item">
+                        <span class="member-name">{user.name}</span>
+                        <span class="member-email">({user.email})</span>
                       </li>
                     {/each}
                   </ul>
                 </div>
-              {:else}
-                <p>No users found in this group hierarchy.</p>
               {/if}
 
               {#if allMembersResult.groups && allMembersResult.groups.length > 0}
                 <div class="members-section">
-                  <h5>Groups ({allMembersResult.groups.length}):</h5>
+                  <h5>Groups:</h5>
                   <ul class="members-list">
                     {#each allMembersResult.groups as group}
-                      <li>
-                        <div class="member-item">
-                          <span class="member-name">{group.name}</span>
-                          {#if group.path && group.path.length > 0}
-                            <div class="member-path">
-                              Path: {group.path.join(' → ')}
-                            </div>
-                          {/if}
-                        </div>
+                      <li class="member-item">
+                        <span class="member-name">{group.name}</span>
                       </li>
                     {/each}
                   </ul>
                 </div>
-              {:else}
-                <p>No subgroups found in this group hierarchy.</p>
               {/if}
             </div>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
     </div>
   </div>
