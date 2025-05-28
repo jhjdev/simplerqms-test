@@ -12,7 +12,10 @@
     "docker:stop": "docker compose down",
     "docker:rebuild": "docker compose up --build",
     "docker:logs": "docker compose logs -f",
-    "docker:exec": "docker compose exec node ash"
+    "docker:exec": "docker compose exec node ash",
+    "test": "NODE_OPTIONS=\"--loader @swc-node/register/esm\" jest",
+    "test:watch": "NODE_OPTIONS=\"--loader @swc-node/register/esm\" jest --watch",
+    "test:coverage": "NODE_OPTIONS=\"--loader @swc-node/register/esm\" jest --coverage"
   },
   "dependencies": {
     "@types/swagger-jsdoc": "^6.0.4",
