@@ -160,11 +160,21 @@
 
         <div class="form-row radio-group">
           <label class="radio-label">
-            <input type="radio" bind:group={selectedMemberType} value="user" />
+            <input 
+              type="radio" 
+              bind:group={selectedMemberType} 
+              value="user"
+              aria-label="User"
+            />
             <span>User</span>
           </label>
           <label class="radio-label">
-            <input type="radio" bind:group={selectedMemberType} value="group" />
+            <input 
+              type="radio" 
+              bind:group={selectedMemberType} 
+              value="group"
+              aria-label="Group"
+            />
             <span>Group</span>
           </label>
         </div>
