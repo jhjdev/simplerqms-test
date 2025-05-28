@@ -10,6 +10,33 @@
   export let users: User[] = [];
   export let groups: Group[] = [];
 
+  // Sorting state
+  let sortField: 'name' | 'email' | 'created_at' = 'name';
+  let sortDirection: 'asc' | 'desc' = 'asc';
+
+  // Sort users based on current sort field and direction
+  $: sortedUsers = [...users].sort((a, b) => {
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    
+    if (sortField === 'created_at') {
+      const aDate = new Date(aValue || '').getTime();
+      const bDate = new Date(bValue || '').getTime();
+      return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+    }
+    
+    const comparison = String(aValue).localeCompare(String(bValue));
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  function handleSort(field: 'name' | 'email' | 'created_at') {
+    if (sortField === field) {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortField = field;
+      sortDirection = 'asc';
+    }
+  }
 
   const dispatch = createEventDispatcher<{
     userEdit: { userId: string; name: string; email: string; groupId: string | null };
@@ -142,14 +169,21 @@
         <DataTable class="user-table">
           <Head>
             <Row>
-              <Cell>Name</Cell>
-              <Cell>Email</Cell>
+              <Cell class="sortable" on:click={() => handleSort('name')}>
+                Name {sortField === 'name' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+              </Cell>
+              <Cell class="sortable" on:click={() => handleSort('email')}>
+                Email {sortField === 'email' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+              </Cell>
               <Cell>Group</Cell>
+              <Cell class="sortable" on:click={() => handleSort('created_at')}>
+                Created {sortField === 'created_at' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
+              </Cell>
               <Cell class="actions-header">Actions</Cell>
             </Row>
           </Head>
           <Body>
-            {#each users as user}
+            {#each sortedUsers as user}
               <Row>
                 <Cell>
                   {#if editingUserId === user.id}
@@ -194,6 +228,9 @@
                     {getUserGroup(user.id)?.name || 'None'}
                   {/if}
                 </Cell>
+                <Cell>
+                  {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                </Cell>
                 <Cell class="actions-cell">
                   <div class="actions">
                     {#if editingUserId === user.id}
@@ -237,3 +274,14 @@
     {/if}
   </div>
 </div>
+
+<style>
+  .sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .sortable:hover {
+    background-color: var(--color-primary-light);
+  }
+</style>

@@ -2,6 +2,7 @@ export type BaseUser = {
   id: string;
   name: string;
   email: string;
+  created_at?: string;
 };
 
 export type User = BaseUser & {
