@@ -1,6 +1,113 @@
 .user-list {
-  margin-top: var(--spacing-xl);
-  padding: var(--spacing-lg);
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.user-table-container {
+  width: 100%;
+  background: var(--color-background);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table-section {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.mdc-data-table {
+  width: 100% !important;
+  border: 1px solid #333 !important;
+}
+
+.mdc-data-table__table {
+  width: 100% !important;
+  border: 0;
+  white-space: nowrap;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.mdc-data-table__table td {
+  border-top: 1px solid #333 !important;
+  border-right: 1px solid #333 !important;
+  padding: 1rem !important;
+}
+
+.mdc-data-table__table td:last-child {
+  border-right: none !important;
+  width: 150px !important;
+}
+
+.mdc-data-table__table th {
+  border-right: 1px solid #333 !important;
+  font-weight: 800 !important;
+  padding: 1rem !important;
+}
+
+.mdc-data-table__table th:last-child {
+  border-right: none !important;
+  width: 150px !important;
+}
+
+.mdc-data-table .actions {
+  display: flex;
+  gap: 0.25rem;
+  opacity: 1 !important;
+  transition: opacity 0.2s ease;
+  justify-content: center;
+}
+
+.mdc-data-table .edit-button.mdc-button--raised:not(:disabled) {
+  background-color: var(--color-secondary) !important;
+  background-color: var(--mdc-protected-button-container-color, var(--color-secondary)) !important;
+}
+
+.mdc-data-table .delete-button.mdc-button--raised:not(:disabled) {
+  background-color: var(--color-primary) !important;
+  background-color: var(--mdc-protected-button-container-color, var(--color-primary)) !important;
+}
+
+.mdc-data-table .edit-button.mdc-button:not(:disabled) {
+  color: var(--color-secondary) !important;
+  color: var(--mdc-text-button-label-text-color, var(--color-secondary)) !important;
+}
+
+.mdc-data-table .delete-button.mdc-button:not(:disabled) {
+  color: var(--color-primary) !important;
+  color: var(--mdc-text-button-label-text-color, var(--color-primary)) !important;
+}
+
+.mdc-data-table .material-icons {
+  color: white !important;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.group-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.actions-cell {
+  width: 120px;
+}
+
+.actions-header {
+  width: 120px;
+  text-align: center;
 }
 
 h1 {
@@ -11,14 +118,20 @@ h1 {
 }
 
 :global(.mdc-data-table) {
+  background-color: #fff;
+  background-color: var(--mdc-theme-surface, #fff);
+  border-radius: 4px;
+  border-radius: var(--mdc-shape-medium, 4px);
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.12);
+  -webkit-overflow-scrolling: touch;
+  display: inline-flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  position: relative;
+  border: 1px solid #333;
   width: 100%;
-  border: 2px solid var(--color-text);
-  border-radius: 0;
-}
-
-:global(.mdc-data-table__table) {
-  min-width: 100%;
-  border-collapse: collapse;
 }
 
 :global(.mdc-data-table__header-cell) {
@@ -45,12 +158,6 @@ h1 {
   margin-right: var(--spacing-sm);
 }
 
-.actions {
-  display: flex;
-  gap: var(--spacing-xs);
-  justify-content: flex-end;
-}
-
 :global(.edit-button) {
   background-color: var(--color-primary) !important;
   color: var(--color-white) !important;
@@ -64,22 +171,7 @@ h1 {
 :global(.mdc-button--raised) {
   min-width: 40px !important;
   width: auto !important;
-  padding: 0 var(--spacing-sm) !important;
-}
-
-.edit-input {
-  width: 100%;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--border-radius-sm);
-}
-
-:global(.edit-button) {
-  --mdc-theme-primary: var(--color-primary);
-}
-
-:global(.delete-button) {
-  --mdc-theme-primary: var(--color-error);
+  padding: 0 0.5rem !important;
 }
 
 :global(.save-button) {

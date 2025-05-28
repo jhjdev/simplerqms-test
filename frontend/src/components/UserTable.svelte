@@ -237,7 +237,3 @@
     {/if}
   </div>
 </div>
-
-<style>
-  /* Remove all inline styles as they are now in UserTable.css */
-</style>
