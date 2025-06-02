@@ -5,79 +5,69 @@ import type { User, Group } from '../../types';
 
 // Mock SMUI components
 vi.mock('@smui/data-table', () => ({
-  default: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  },
-  Head: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  },
-  Body: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  },
-  Row: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  },
-  Cell: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  }
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Head: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Body: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Row: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Cell: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
 }));
 
 vi.mock('@smui/button', () => ({
-  default: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  }
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
 }));
 
 vi.mock('@smui/icon-button', () => ({
-  default: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  }
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
 }));
 
 vi.mock('@smui/select', () => ({
-  default: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  }
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Option: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
 }));
 
 describe('UserTable', () => {

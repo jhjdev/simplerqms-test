@@ -5,25 +5,54 @@ import type { User, Group } from '../../types';
 
 // Mock SMUI components
 vi.mock('@smui/button', () => ({
-  default: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  }
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
 }));
 
 vi.mock('@smui/select', () => ({
-  default: {
-    render: (props: any) => ({
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      ...props
-    })
-  }
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Option: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
+}));
+
+vi.mock('@smui/dialog', () => ({
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Title: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Content: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Actions: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
 }));
 
 describe('GroupMembershipPanel', () => {
@@ -98,18 +127,19 @@ describe('GroupMembershipPanel', () => {
     render(GroupMembershipPanel, { users: mockUsers, groups: mockGroups });
     
     // Select a group
-    const groupSelects = screen.getAllByRole('combobox');
-    await fireEvent.change(groupSelects[0], { target: { value: '1' } });
+    const groupSelect = screen.getByTestId('check-membership-group-select');
+    await fireEvent.change(groupSelect, { target: { value: '1' } });
     
     // Select member type
     const userRadio = screen.getByRole('radio', { name: 'User' });
     await fireEvent.click(userRadio);
     
     // Select a user
-    await fireEvent.change(groupSelects[1], { target: { value: '1' } });
+    const memberSelect = screen.getByTestId('check-membership-member-select');
+    await fireEvent.change(memberSelect, { target: { value: '1' } });
     
     // Click check membership button
-    const checkButton = screen.getByRole('button', { name: 'Check Membership' });
+    const checkButton = screen.getByTestId('check-membership-button');
     await fireEvent.click(checkButton);
   });
 
@@ -117,11 +147,11 @@ describe('GroupMembershipPanel', () => {
     render(GroupMembershipPanel, { users: mockUsers, groups: mockGroups });
     
     // Select a group
-    const groupSelects = screen.getAllByRole('combobox');
-    await fireEvent.change(groupSelects[0], { target: { value: '1' } });
+    const groupSelect = screen.getByTestId('all-members-group-select');
+    await fireEvent.change(groupSelect, { target: { value: '1' } });
     
     // Click get all members button
-    const getAllButton = screen.getByRole('button', { name: 'Get All Members' });
+    const getAllButton = screen.getByTestId('get-all-members-button');
     await fireEvent.click(getAllButton);
   });
 }); 

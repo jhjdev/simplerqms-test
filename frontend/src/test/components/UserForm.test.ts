@@ -2,6 +2,46 @@ import { render, fireEvent } from '@testing-library/svelte';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import UserForm from '../../components/UserForm.svelte';
 
+// Mock SMUI components
+vi.mock('@smui/button', () => ({
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
+}));
+
+vi.mock('@smui/card', () => ({
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Content: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Actions: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
+}));
+
+vi.mock('@smui/textfield', () => ({
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
+}));
+
 // Mock the $state function used in the UserForm component
 vi.mock('svelte', async (importOriginal) => {
   const original = await importOriginal();

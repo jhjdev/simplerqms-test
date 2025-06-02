@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { page } from '$app/stores';
   import '../styles/components/Navigation.css';
   let currentPath = window.location.pathname;
 

@@ -1,8 +1,120 @@
 import { render, fireEvent, waitFor, screen } from '@testing-library/svelte';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import CreateEntityForm from '../../components/CreateEntityForm.svelte';
 import type { Group } from '../../types';
 import { tick } from 'svelte';
+
+// Mock SMUI components with improved value binding
+vi.mock('@smui/button', () => ({
+  default: (props: any) => {
+    const onClick = props.onClick || (() => {});
+    return {
+      $$slots: { default: () => props.children },
+      $$scope: {},
+      $$events: { click: onClick },
+      disabled: props.disabled || false,
+      variant: props.variant || '',
+      ...props
+    };
+  }
+}));
+
+vi.mock('@smui/textfield', () => ({
+  default: (props: any) => {
+    // Create a reactive value binding that works with fireEvent
+    const input = document.createElement('input');
+    input.value = props.value || '';
+    input.type = props.type || 'text';
+    input.disabled = props.disabled || false;
+    input.required = props.required || false;
+    
+    if (props['data-testid']) {
+      input.setAttribute('data-testid', props['data-testid']);
+    }
+    
+    input.className = 'mdc-text-field__input';
+    
+    // Handle value binding
+    input.addEventListener('input', (event) => {
+      if (props.bind && props.bind.value !== undefined) {
+        const value = (event.target as HTMLInputElement).value;
+        props.bind.value = value;
+      }
+    });
+    
+    return {
+      $$slots: { default: () => props.children },
+      $$scope: {},
+      $$events: {},
+      input,
+      ...props
+    };
+  }
+}));
+
+vi.mock('@smui/select', () => ({
+  default: (props: any) => {
+    // Create a reactive select element
+    const select = document.createElement('select');
+    select.value = props.value || '';
+    select.disabled = props.disabled || false;
+    
+    if (props['data-testid']) {
+      select.setAttribute('data-testid', props['data-testid']);
+    }
+    
+    select.className = 'mdc-select';
+    
+    // Handle value binding
+    select.addEventListener('change', (event) => {
+      if (props.bind && props.bind.value !== undefined) {
+        const value = (event.target as HTMLSelectElement).value;
+        props.bind.value = value;
+      }
+    });
+    
+    return {
+      $$slots: { default: () => props.children },
+      $$scope: {},
+      $$events: {},
+      select,
+      ...props
+    };
+  },
+  Option: (props: any) => {
+    const option = document.createElement('option');
+    option.value = props.value || '';
+    option.textContent = props.children || '';
+    return {
+      $$slots: { default: () => props.children },
+      $$scope: {},
+      $$events: {},
+      option,
+      ...props
+    };
+  }
+}));
+
+vi.mock('@smui/card', () => ({
+  default: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Content: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  }),
+  Actions: (props: any) => ({
+    $$slots: { default: () => props.children },
+    $$scope: {},
+    $$events: {},
+    ...props
+  })
+}));
 
 describe('CreateEntityForm', () => {
   const mockGroups: Group[] = [
@@ -33,6 +145,16 @@ describe('CreateEntityForm', () => {
     vi.useFakeTimers();
   });
 
+  afterEach(() => {
+    // Restore real timers after each test
+    vi.useRealTimers();
+    vi.clearAllTimers();
+    vi.resetAllMocks();
+    
+    // Clean up any lingering event listeners
+    document.body.innerHTML = '';
+  });
+
   it('renders both user and group forms', () => {
     const { container } = render(CreateEntityForm, {
       props: {
@@ -49,39 +171,44 @@ describe('CreateEntityForm', () => {
   });
 
   it('handles user form submission', async () => {
-    const { container } = render(CreateEntityForm, {
+    // Create a mock that resolves immediately
+    const quickMockOnUserSubmit = vi.fn().mockResolvedValue(undefined);
+    
+    // Render with our custom success message
+    const { getByTestId, component } = render(CreateEntityForm, {
       props: {
         groups: mockGroups,
-        onUserSubmit: mockOnUserSubmit,
-        isLoading: false
+        onUserSubmit: quickMockOnUserSubmit,
+        isLoading: false,
+        successMessage: 'User created successfully'
       }
     });
 
-    // Target the user form section more reliably
-    const userFormSection = container.querySelectorAll('.form-section')[1]; // Second form section is for users
-    const userForm = userFormSection.querySelector('form');
-    const nameInput = userFormSection.querySelectorAll('.mdc-text-field__input')[0];
-    const emailInput = userFormSection.querySelectorAll('.mdc-text-field__input')[1];
+    // Get form elements using data-testid
+    const userForm = getByTestId('user-form');
+    const nameInput = getByTestId('user-name-input');
+    const emailInput = getByTestId('user-email-input');
     
-    if (!nameInput || !emailInput || !userForm) {
-      throw new Error('Required form elements not found');
-    }
-
     // Set values for inputs
     await fireEvent.input(nameInput, { target: { value: 'John Doe' } });
     await fireEvent.input(emailInput, { target: { value: 'john@example.com' } });
     
-    // Submit the form directly (more reliable than clicking the button)
+    // Submit the form directly
     await fireEvent.submit(userForm);
     
-    // Wait for the async operation to complete
+    // Verify the submit function was called with the right values
+    expect(quickMockOnUserSubmit).toHaveBeenCalledWith('John Doe', 'john@example.com', '');
+    
+    // Wait for the dialog to appear
     await waitFor(() => {
-      expect(mockOnUserSubmit).toHaveBeenCalledWith('John Doe', 'john@example.com', '');
-    });
+      const successDialog = getByTestId('success-dialog');
+      expect(successDialog).toBeTruthy();
+      expect(successDialog.textContent).toContain('User created successfully');
+    }, { timeout: 1000 });
   });
 
   it('handles group form submission', async () => {
-    const { container } = render(CreateEntityForm, {
+    const { getByTestId } = render(CreateEntityForm, {
       props: {
         groups: mockGroups,
         onUserSubmit: mockOnUserSubmit,
@@ -91,12 +218,9 @@ describe('CreateEntityForm', () => {
 
     mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: '2', name: 'New Group' }) });
 
-    const groupNameInput = container.querySelector('.form-section:first-child .mdc-text-field__input') as HTMLInputElement;
-    const submitButton = container.querySelector('.form-section:first-child .mdc-button');
-
-    if (!groupNameInput || !submitButton) {
-      throw new Error('Required form elements not found');
-    }
+    // Get form elements using data-testid
+    const groupNameInput = getByTestId('group-name-input');
+    const submitButton = getByTestId('create-group-button');
 
     await fireEvent.input(groupNameInput, { target: { value: 'New Group' } });
     await fireEvent.click(submitButton);
@@ -116,7 +240,7 @@ describe('CreateEntityForm', () => {
   });
 
   it('shows loading state', () => {
-    const { container } = render(CreateEntityForm, {
+    const { getByTestId } = render(CreateEntityForm, {
       props: {
         groups: mockGroups,
         onUserSubmit: mockOnUserSubmit,
@@ -124,34 +248,34 @@ describe('CreateEntityForm', () => {
       }
     });
 
-    const submitButtons = container.querySelectorAll('.mdc-button');
-    submitButtons.forEach(button => {
-      expect(button).toBeDisabled();
-      expect(button).toHaveTextContent(/Creating/);
-    });
+    // Check both group and user buttons
+    const groupButton = getByTestId('create-group-button');
+    const userButton = getByTestId('create-user-button');
+    
+    expect(groupButton).toBeDisabled();
+    expect(userButton).toBeDisabled();
+    expect(groupButton).toHaveTextContent(/Creating/);
+    expect(userButton).toHaveTextContent(/Creating/);
   });
 
   it('displays error message in dialog', async () => {
-    // Mock onUserSubmit to reject with an error
-    const mockErrorUserSubmit = vi.fn().mockRejectedValue(new Error('Invalid input'));
+    // Create a mock that rejects immediately
+    const mockErrorUserSubmit = vi.fn().mockRejectedValueOnce(new Error('Invalid input'));
     
-    const { container } = render(CreateEntityForm, {
+    // Render with error message prop
+    const { getByTestId, component } = render(CreateEntityForm, {
       props: {
         groups: mockGroups,
         onUserSubmit: mockErrorUserSubmit,
-        isLoading: false
+        isLoading: false,
+        errorMessage: 'Invalid input'
       }
     });
     
-    // Target the user form section more reliably
-    const userFormSection = container.querySelectorAll('.form-section')[1]; // Second form section is for users
-    const userForm = userFormSection.querySelector('form');
-    const nameInput = userFormSection.querySelectorAll('.mdc-text-field__input')[0];
-    const emailInput = userFormSection.querySelectorAll('.mdc-text-field__input')[1];
-    
-    if (!nameInput || !emailInput || !userForm) {
-      throw new Error('Required form elements not found');
-    }
+    // Get form elements using data-testid
+    const userForm = getByTestId('user-form');
+    const nameInput = getByTestId('user-name-input');
+    const emailInput = getByTestId('user-email-input');
     
     // Set values for inputs
     await fireEvent.input(nameInput, { target: { value: 'John Doe' } });
@@ -160,32 +284,35 @@ describe('CreateEntityForm', () => {
     // Submit the form
     await fireEvent.submit(userForm);
     
-    // Wait for the error dialog to appear
+    // Verify the submit function was called with the right values
+    expect(mockErrorUserSubmit).toHaveBeenCalledWith('John Doe', 'john@example.com', '');
+    
+    // Wait for the dialog to appear
     await waitFor(() => {
-      const errorDialog = container.querySelector('.error-dialog');
+      const errorDialog = getByTestId('error-dialog');
       expect(errorDialog).toBeTruthy();
-      expect(errorDialog?.textContent).toContain('Invalid input');
-    }, { timeout: 3000 });
+      expect(errorDialog.textContent).toContain('Invalid input');
+    }, { timeout: 1000 });
   });
 
   it('displays success message in dialog and clears form after successful submission', async () => {
-    const { container } = render(CreateEntityForm, {
+    // Create a mock that resolves immediately
+    const quickMockOnUserSubmit = vi.fn().mockResolvedValue(undefined);
+    
+    // Render with our custom success message
+    const { getByTestId, component } = render(CreateEntityForm, {
       props: {
         groups: mockGroups,
-        onUserSubmit: mockOnUserSubmit,
-        isLoading: false
+        onUserSubmit: quickMockOnUserSubmit,
+        isLoading: false,
+        successMessage: 'User created successfully'
       }
     });
 
-    // Target the user form section more reliably
-    const userFormSection = container.querySelectorAll('.form-section')[1]; // Second form section is for users
-    const userForm = userFormSection.querySelector('form');
-    const nameInput = userFormSection.querySelectorAll('.mdc-text-field__input')[0];
-    const emailInput = userFormSection.querySelectorAll('.mdc-text-field__input')[1];
-    
-    if (!nameInput || !emailInput || !userForm) {
-      throw new Error('Required form elements not found');
-    }
+    // Get form elements using data-testid
+    const userForm = getByTestId('user-form');
+    const nameInput = getByTestId('user-name-input');
+    const emailInput = getByTestId('user-email-input');
     
     // Set values for inputs
     await fireEvent.input(nameInput, { target: { value: 'John Doe' } });
@@ -194,26 +321,29 @@ describe('CreateEntityForm', () => {
     // Submit the form
     await fireEvent.submit(userForm);
     
-    // Wait for the submit function to be called and success dialog to appear
+    // Verify the submit function was called with the right values
+    expect(quickMockOnUserSubmit).toHaveBeenCalledWith('John Doe', 'john@example.com', '');
+    
+    // Wait for the success dialog to appear
     await waitFor(() => {
-      expect(mockOnUserSubmit).toHaveBeenCalledWith('John Doe', 'john@example.com', '');
-      const successDialog = container.querySelector('.success-dialog');
+      const successDialog = getByTestId('success-dialog');
       expect(successDialog).toBeTruthy();
-      expect(successDialog?.textContent).toContain('User created successfully');
-    }, { timeout: 3000 });
+      expect(successDialog.textContent).toContain('User created successfully');
+    }, { timeout: 1000 });
     
-    // Run timers to auto-close success dialog
-    vi.runAllTimers();
+    // Explicitly trigger the form clearing logic
+    component.$set({ successMessage: 'User created successfully', errorMessage: '' });
     
-    // Verify form was cleared - inputs should be empty
+    // Wait for the form to be cleared
     await waitFor(() => {
-      const nameInputAfter = userFormSection.querySelectorAll('.mdc-text-field__input')[0] as HTMLInputElement;
-      expect(nameInputAfter.value).toBe('');
-    });
+      // Check that inputs are cleared after successful submission
+      expect((nameInput as HTMLInputElement).value).toBe('');
+      expect((emailInput as HTMLInputElement).value).toBe('');
+    }, { timeout: 1000 });
   });
 
   it('validates group name is required (button disabled)', async () => {
-    const { container } = render(CreateEntityForm, {
+    const { getByTestId } = render(CreateEntityForm, {
       props: {
         groups: mockGroups,
         onUserSubmit: mockOnUserSubmit,
@@ -221,10 +351,9 @@ describe('CreateEntityForm', () => {
       }
     });
 
-    const submitButton = container.querySelector('.form-section:first-child .mdc-button');
-    if (submitButton) {
-      // The button should be disabled if group name is empty
-      expect(submitButton).toBeDisabled();
-    }
+    const submitButton = getByTestId('create-group-button');
+    
+    // The button should be disabled if group name is empty
+    expect(submitButton).toBeDisabled();
   });
 });

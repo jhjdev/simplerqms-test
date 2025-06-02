@@ -147,9 +147,11 @@
       <div class="panel-content">
         <div class="form-row">
           <select 
-            class="custom-select" 
+            class="custom-select"
             bind:value={selectedGroupId} 
             on:change={() => resetMembershipCheck()}
+            aria-label="Select Group"
+            data-testid="check-membership-group-select"
           >
             <option value={null} disabled>Select a group</option>
             {#each groups as group}
@@ -184,6 +186,8 @@
             class="custom-select" 
             bind:value={selectedMemberId} 
             on:change={() => resetMembershipCheck()}
+            aria-label="Select Member"
+            data-testid="check-membership-member-select"
           >
             <option value={null} disabled>Select a {selectedMemberType}</option>
             {#if selectedMemberType === 'user'}
@@ -205,6 +209,7 @@
             disabled={isCheckingMembership || !selectedGroupId || !selectedMemberId}
             class="mdc-button--raised"
             style="background-color: var(--color-tertiary); color: white;"
+            data-testid="check-membership-button"
           >
             {isCheckingMembership ? 'Checking...' : 'Check Membership'}
           </Button>
@@ -253,6 +258,8 @@
             class="custom-select" 
             bind:value={selectedGroupForMembers} 
             on:change={() => resetAllMembers()}
+            aria-label="Select Group"
+            data-testid="all-members-group-select"
           >
             <option value={null} disabled>Select a group</option>
             {#each groups as group}
@@ -268,6 +275,7 @@
             disabled={isLoadingMembers || !selectedGroupForMembers}
             class="mdc-button--raised"
             style="background-color: var(--color-tertiary); color: white;"
+            data-testid="get-all-members-button"
           >
             {isLoadingMembers ? 'Loading...' : 'Get All Members'}
           </Button>

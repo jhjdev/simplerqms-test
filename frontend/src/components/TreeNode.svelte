@@ -153,7 +153,7 @@
 
 <div class="tree-node">
   <div class="tree-node-content">
-    <IconButton class="material-icons" on:click={toggleNodeExpand}>
+    <IconButton class="material-icons" on:click={toggleNodeExpand} data-testid="toggle-expand-button">
       {isExpanded ? 'expand_more' : 'chevron_right'}
     </IconButton>
 
@@ -187,10 +187,10 @@
         close
       </IconButton>
     {:else}
-      <IconButton class="material-icons" on:click={() => handleEdit(group)}>
+      <IconButton class="material-icons" on:click={() => handleEdit(group)} data-testid="edit-button">
         edit
       </IconButton>
-      <IconButton class="material-icons danger" on:click={() => handleDelete(group)}>
+      <IconButton class="material-icons danger" on:click={() => handleDelete(group)} data-testid="delete-button">
         delete
       </IconButton>
     {/if}

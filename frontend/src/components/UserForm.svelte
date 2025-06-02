@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ComponentType, SvelteComponentTyped } from 'svelte';
+  import type { SvelteComponentTyped } from 'svelte';
   import Button from '@smui/button';
   import Card, { Content, Actions } from '@smui/card';
   import Textfield from '@smui/textfield';
@@ -7,20 +7,18 @@
   import type { User } from '../types';
   import { createEventDispatcher } from 'svelte';
 
-  const props = $props<{
-    onSubmit: (name: string, email: string) => Promise<void>;
-    isLoading?: boolean;
-    errorMessage?: string;
-    successMessage?: string;
-  }>();
+  export let onSubmit: (name: string, email: string) => Promise<void>;
+  export let isLoading: boolean = false;
+  export let errorMessage: string = '';
+  export let successMessage: string = '';
 
-  let name = $state('');
-  let email = $state('');
-
+  let name = '';
+  let email = '';
+  
   async function handleSubmit() {
-    await props.onSubmit(name, email);
+    await onSubmit(name, email);
     // Clear form if no error message is present (meaning submission was successful)
-    if (!props.errorMessage) {
+    if (!errorMessage) {
       name = '';
       email = '';
     }
@@ -31,12 +29,12 @@
   <Content>
     <h2>Create a new user</h2>
     
-    {#if props.errorMessage}
-      <div class="error-message">{props.errorMessage}</div>
+    {#if errorMessage}
+      <div class="error-message">{errorMessage}</div>
     {/if}
     
-    {#if props.successMessage}
-      <div class="success-message">{props.successMessage}</div>
+    {#if successMessage}
+      <div class="success-message">{successMessage}</div>
     {/if}
     
     <div class="form-fields-container">
@@ -45,7 +43,7 @@
         <Textfield 
           bind:value={name}
           required
-          disabled={props.isLoading}
+          disabled={isLoading}
         />
       </div>
       <span>Email Address:</span>
@@ -54,7 +52,7 @@
           bind:value={email}
           type="email"
           required
-          disabled={props.isLoading}
+          disabled={isLoading}
         />
       </div>
     </div>
@@ -64,11 +62,11 @@
       <Button 
         variant="raised" 
         type="submit"
-        disabled={props.isLoading}
+        disabled={isLoading}
         class="create-user-button"
         color="primary"
       >
-      {props.isLoading ? 'Saving...' : 'Create User'}
+      {isLoading ? 'Saving...' : 'Create User'}
     </Button>
     </form>
   </Actions>

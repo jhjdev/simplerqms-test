@@ -116,7 +116,7 @@
         
         <!-- Group dialogs are now handled by the shared dialogs at the bottom -->
 
-        <form on:submit={handleGroupSubmit} class="form-fields">
+        <form on:submit={handleGroupSubmit} class="form-fields" data-testid="group-form">
           <div class="fields-wrapper">
             <div class="form-field">
               <div class="textfield-wrapper">
@@ -126,6 +126,7 @@
                   required
                   disabled={isLoading}
                   class="text-field"
+                  data-testid="group-name-input"
                 />
               </div>
             </div>
@@ -137,6 +138,7 @@
                   bind:value={parentId}
                   disabled={isLoading}
                   class="select-field"
+                  data-testid="parent-group-select"
                 >
                   <Option value="">None</Option>
                   {#each groups as group}
@@ -154,6 +156,7 @@
               disabled={isLoading || !groupName.trim()}
               class="submit-button mdc-button--raised"
               style="background-color: var(--color-tertiary); color: white;"
+              data-testid="create-group-button"
             >
               {isLoading ? 'Creating...' : 'Create Group'}
             </Button>
@@ -168,7 +171,7 @@
         
         <!-- User dialogs are now handled by the shared dialogs at the bottom -->
 
-        <form on:submit={handleUserSubmit} class="form-fields">
+        <form on:submit={handleUserSubmit} class="form-fields" data-testid="user-form">
           <div class="fields-wrapper">
             <div class="form-field">
               <div class="textfield-wrapper">
@@ -178,6 +181,7 @@
                   required
                   disabled={isLoading}
                   class="text-field"
+                  data-testid="user-name-input"
                 />
               </div>
             </div>
@@ -191,6 +195,7 @@
                   required
                   disabled={isLoading}
                   class="text-field"
+                  data-testid="user-email-input"
                 />
               </div>
             </div>
@@ -202,6 +207,7 @@
                   bind:value={userGroupId}
                   disabled={isLoading}
                   class="select-field"
+                  data-testid="user-group-select"
                 >
                   <Option value="">No group</Option>
                   {#each groups as group}
@@ -219,6 +225,7 @@
               disabled={isLoading}
               class="submit-button mdc-button--raised"
               style="background-color: var(--color-tertiary); color: white;"
+              data-testid="create-user-button"
             >
               {isLoading ? 'Creating...' : 'Create User'}
             </Button>
@@ -231,8 +238,8 @@
 
 <!-- Custom Success Dialog -->
 {#if showSuccessDialog}
-<div class="dialog-overlay" on:click={() => showSuccessDialog = false} on:keydown={(e) => e.key === 'Escape' && (showSuccessDialog = false)} tabindex="0" role="dialog" aria-modal="true">
-  <div class="dialog success-dialog" on:click|stopPropagation on:keydown={() => {}}>
+<div class="dialog-overlay" on:click={() => showSuccessDialog = false} on:keydown={(e) => e.key === 'Escape' && (showSuccessDialog = false)} tabindex="0" role="dialog" aria-modal="true" data-testid="success-dialog-overlay">
+  <div class="dialog success-dialog" on:click|stopPropagation on:keydown={() => {}} data-testid="success-dialog">
     <div class="dialog-header">
       <h3>Success</h3>
     </div>
@@ -248,8 +255,8 @@
 
 <!-- Custom Error Dialog -->
 {#if showErrorDialog}
-<div class="dialog-overlay" on:click={() => showErrorDialog = false} on:keydown={(e) => e.key === 'Escape' && (showErrorDialog = false)} tabindex="0" role="dialog" aria-modal="true">
-  <div class="dialog error-dialog" on:click|stopPropagation on:keydown={() => {}}>
+<div class="dialog-overlay" on:click={() => showErrorDialog = false} on:keydown={(e) => e.key === 'Escape' && (showErrorDialog = false)} tabindex="0" role="dialog" aria-modal="true" data-testid="error-dialog-overlay">
+  <div class="dialog error-dialog" on:click|stopPropagation on:keydown={() => {}} data-testid="error-dialog">
     <div class="dialog-header">
       <h3>Error</h3>
     </div>
