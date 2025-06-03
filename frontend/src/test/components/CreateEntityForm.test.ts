@@ -1,120 +1,84 @@
-import { render, fireEvent, waitFor, screen } from '@testing-library/svelte';
+import { render, fireEvent, waitFor, screen, cleanup } from '@testing-library/svelte';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import CreateEntityForm from '../../components/CreateEntityForm.svelte';
 import type { Group } from '../../types';
 import { tick } from 'svelte';
 
 // Mock SMUI components with improved value binding
+// Mock CSS import
+vi.mock('../../styles/components/CreateEntityForm.css', () => ({}));
+
+// Mock SMUI components using the $$render approach that works with Svelte components
 vi.mock('@smui/button', () => ({
-  default: (props: any) => {
-    const onClick = props.onClick || (() => {});
-    return {
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: { click: onClick },
-      disabled: props.disabled || false,
-      variant: props.variant || '',
-      ...props
-    };
-  }
+  default: vi.fn().mockImplementation(() => ({
+    $$render: (_: any, props: any = {}) => {
+      const { disabled, 'data-testid': dataTestId } = props;
+      const disabledAttr = disabled ? 'disabled' : '';
+      const dataTestIdAttr = dataTestId ? `data-testid="${dataTestId}"` : '';
+      const content = props.children || props.$$slots?.default?.(props.$$scope) || 'Button';
+      return `<button class="mdc-button" ${disabledAttr} ${dataTestIdAttr}>${content}</button>`;
+    }
+  }))
 }));
 
 vi.mock('@smui/textfield', () => ({
-  default: (props: any) => {
-    // Create a reactive value binding that works with fireEvent
-    const input = document.createElement('input');
-    input.value = props.value || '';
-    input.type = props.type || 'text';
-    input.disabled = props.disabled || false;
-    input.required = props.required || false;
-    
-    if (props['data-testid']) {
-      input.setAttribute('data-testid', props['data-testid']);
+  default: vi.fn().mockImplementation(() => ({
+    $$render: (_: any, props: any = {}) => {
+      const { value, type = 'text', disabled, required, 'data-testid': dataTestId } = props;
+      const disabledAttr = disabled ? 'disabled' : '';
+      const requiredAttr = required ? 'required' : '';
+      const dataTestIdAttr = dataTestId ? `data-testid="${dataTestId}"` : '';
+      const typeAttr = `type="${type || 'text'}"`;
+      return `<div class="mdc-text-field">
+        <input class="mdc-text-field__input" ${typeAttr} ${disabledAttr} ${requiredAttr} ${dataTestIdAttr} value="${value || ''}" />
+      </div>`;
     }
-    
-    input.className = 'mdc-text-field__input';
-    
-    // Handle value binding
-    input.addEventListener('input', (event) => {
-      if (props.bind && props.bind.value !== undefined) {
-        const value = (event.target as HTMLInputElement).value;
-        props.bind.value = value;
-      }
-    });
-    
-    return {
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      input,
-      ...props
-    };
-  }
+  }))
 }));
 
 vi.mock('@smui/select', () => ({
-  default: (props: any) => {
-    // Create a reactive select element
-    const select = document.createElement('select');
-    select.value = props.value || '';
-    select.disabled = props.disabled || false;
-    
-    if (props['data-testid']) {
-      select.setAttribute('data-testid', props['data-testid']);
+  default: vi.fn().mockImplementation(() => ({
+    $$render: (_: any, props: any = {}) => {
+      const { value, disabled, 'data-testid': dataTestId } = props;
+      const disabledAttr = disabled ? 'disabled' : '';
+      const dataTestIdAttr = dataTestId ? `data-testid="${dataTestId}"` : '';
+      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
+      return `<div class="mdc-select">
+        <select class="mdc-select__native-control" ${disabledAttr} ${dataTestIdAttr}>${content}</select>
+      </div>`;
     }
-    
-    select.className = 'mdc-select';
-    
-    // Handle value binding
-    select.addEventListener('change', (event) => {
-      if (props.bind && props.bind.value !== undefined) {
-        const value = (event.target as HTMLSelectElement).value;
-        props.bind.value = value;
-      }
-    });
-    
-    return {
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      select,
-      ...props
-    };
-  },
-  Option: (props: any) => {
-    const option = document.createElement('option');
-    option.value = props.value || '';
-    option.textContent = props.children || '';
-    return {
-      $$slots: { default: () => props.children },
-      $$scope: {},
-      $$events: {},
-      option,
-      ...props
-    };
-  }
+  })),
+  Option: vi.fn().mockImplementation(() => ({
+    $$render: (_: any, props: any = {}) => {
+      const { value } = props;
+      const content = props.children || '';
+      return `<option value="${value || ''}">${content}</option>`;
+    }
+  }))
 }));
 
 vi.mock('@smui/card', () => ({
-  default: (props: any) => ({
-    $$slots: { default: () => props.children },
-    $$scope: {},
-    $$events: {},
-    ...props
-  }),
-  Content: (props: any) => ({
-    $$slots: { default: () => props.children },
-    $$scope: {},
-    $$events: {},
-    ...props
-  }),
-  Actions: (props: any) => ({
-    $$slots: { default: () => props.children },
-    $$scope: {},
-    $$events: {},
-    ...props
-  })
-}));
+  default: vi.fn().mockImplementation(() => ({
+    $$render: (_: any, props: any = {}) => {
+      const { class: className } = props;
+      const classAttr = className ? `class="${className}"` : '';
+      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
+      return `<div ${classAttr}>${content}</div>`;
+    }
+  })),
+  Content: vi.fn().mockImplementation(() => ({
+    $$render: (_: any, props: any = {}) => {
+      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
+      return `<div class="mdc-card__content">${content}</div>`;
+    }
+  })),
+  Actions: vi.fn().mockImplementation(() => ({
+    $$render: (_: any, props: any = {}) => {
+      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
+      return `<div class="mdc-card__actions">${content}</div>`;
+    }
+  }))
+}))
 
 describe('CreateEntityForm', () => {
   const mockGroups: Group[] = [
@@ -135,11 +99,21 @@ describe('CreateEntityForm', () => {
     // Simulate successful submission
     return Promise.resolve();
   });
-  const mockFetch = vi.fn();
+  const mockFetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ id: '2', name: 'New Group' })
+  });
+  
+  // Target DOM element that will be shared across tests
+  let target: HTMLDivElement;
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal('fetch', mockFetch);
+    
+    // Create a fresh target for each test
+    target = document.createElement('div');
+    document.body.appendChild(target);
     
     // Mock the setTimeout function to execute immediately in tests
     vi.useFakeTimers();
@@ -152,7 +126,13 @@ describe('CreateEntityForm', () => {
     vi.resetAllMocks();
     
     // Clean up any lingering event listeners
+    if (target && target.parentNode) {
+      target.parentNode.removeChild(target);
+    }
+    
+    // Additional cleanup
     document.body.innerHTML = '';
+    cleanup();
   });
 
   it('renders both user and group forms', () => {
@@ -161,7 +141,8 @@ describe('CreateEntityForm', () => {
         groups: mockGroups,
         onUserSubmit: mockOnUserSubmit,
         isLoading: false
-      }
+      },
+      target
     });
 
     expect(container.querySelector('.mdc-card')).toBeTruthy();
@@ -181,7 +162,8 @@ describe('CreateEntityForm', () => {
         onUserSubmit: quickMockOnUserSubmit,
         isLoading: false,
         successMessage: 'User created successfully'
-      }
+      },
+      target
     });
 
     // Get form elements using data-testid
@@ -213,7 +195,8 @@ describe('CreateEntityForm', () => {
         groups: mockGroups,
         onUserSubmit: mockOnUserSubmit,
         isLoading: false
-      }
+      },
+      target
     });
 
     mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ id: '2', name: 'New Group' }) });
@@ -245,7 +228,8 @@ describe('CreateEntityForm', () => {
         groups: mockGroups,
         onUserSubmit: mockOnUserSubmit,
         isLoading: true
-      }
+      },
+      target
     });
 
     // Check both group and user buttons
@@ -269,7 +253,8 @@ describe('CreateEntityForm', () => {
         onUserSubmit: mockErrorUserSubmit,
         isLoading: false,
         errorMessage: 'Invalid input'
-      }
+      },
+      target
     });
     
     // Get form elements using data-testid
@@ -306,7 +291,8 @@ describe('CreateEntityForm', () => {
         onUserSubmit: quickMockOnUserSubmit,
         isLoading: false,
         successMessage: 'User created successfully'
-      }
+      },
+      target
     });
 
     // Get form elements using data-testid
@@ -348,7 +334,8 @@ describe('CreateEntityForm', () => {
         groups: mockGroups,
         onUserSubmit: mockOnUserSubmit,
         isLoading: false
-      }
+      },
+      target
     });
 
     const submitButton = getByTestId('create-group-button');
