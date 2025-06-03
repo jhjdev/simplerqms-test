@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/svelte';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import UserTable from '../../components/UserTable.svelte';
@@ -8,109 +9,25 @@ import { tick } from 'svelte';
 vi.mock('../../styles/components/UserTable.css', () => ({}));
 vi.mock('material-icons/iconfont/material-icons.css', () => ({}));
 
-// Mock SMUI components with proper $$render functions
-vi.mock('@smui/data-table', () => ({
-  default: {
-    $$render: (_: any, props: any = {}) => {
-      const { class: className } = props;
-      const classAttr = className ? `class="${className}"` : '';
-      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
-      return `<div ${classAttr} role="table">${content}</div>`;
-    }
-  },
-  Head: {
-    $$render: (_: any, props: any = {}) => {
-      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
-      return `<div role="rowgroup" class="mdc-data-table__header-row">${content}</div>`;
-    }
-  },
-  Body: {
-    $$render: (_: any, props: any = {}) => {
-      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
-      return `<div role="rowgroup" class="mdc-data-table__content">${content}</div>`;
-    }
-  },
-  Row: {
-    $$render: (_: any, props: any = {}) => {
-      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
-      return `<div role="row" class="mdc-data-table__row">${content}</div>`;
-    }
-  },
-  Cell: {
-    $$render: (_: any, props: any = {}) => {
-      const { class: className, on_click } = props;
-      const classAttr = className ? `class="${className}"` : '';
-      const clickable = on_click ? 'onclick="function() {}"' : '';
-      const role = props.role || (className?.includes('header') ? 'columnheader' : 'cell');
-      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
-      return `<div role="${role}" ${classAttr} ${clickable}>${content}</div>`;
-    }
-  }
-}));
-
-vi.mock('@smui/button', () => ({
-  default: {
-    $$render: (_: any, props: any = {}) => {
-      const { variant, on_click, class: className } = props;
-      const variantClass = variant === 'raised' ? 'mdc-button--raised' : '';
-      const classAttr = className ? `class="${className} ${variantClass}"` : `class="${variantClass}"`;
-      const content = props.children || props.$$slots?.default?.(props.$$scope) || 'Button';
-      return `<button ${classAttr} role="button">${content}</button>`;
-    }
-  }
-}));
-
-vi.mock('@smui/icon-button', () => ({
-  default: {
-    $$render: (_: any, props: any = {}) => {
-      const { class: className, on_click } = props;
-      const classAttr = className ? `class="${className}"` : '';
-      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
-      return `<button ${classAttr} role="button">${content}</button>`;
-    }
-  }
-}));
-
-vi.mock('@smui/select', () => ({
-  default: {
-    $$render: (_: any, props: any = {}) => {
-      const { bind_value, value, class: className } = props;
-      const classAttr = className ? `class="${className}"` : '';
-      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
-      // Handle two-way binding by setting the value on change
-      const onChange = `onchange="this.value = '${value || ''}';"`;
-      return `<div ${classAttr} class="mdc-select">
-        <select class="mdc-select__native-control" ${onChange} value="${value || ''}">${content}</select>
-      </div>`;
-    }
-  },
-  Option: {
-    $$render: (_: any, props: any = {}) => {
-      const { value } = props;
-      const valueAttr = value !== undefined ? `value="${value}"` : '';
-      const content = props.children || props.$$slots?.default?.(props.$$scope) || '';
-      return `<option ${valueAttr}>${content}</option>`;
-    }
-  }
-}));
-
 describe('UserTable', () => {
   const mockUsers: User[] = [
     {
       id: '1',
       name: 'John Doe',
       email: 'john@example.com',
+      group_id: '1',
+      created_at: '2024-03-20T00:00:00Z',
       type: 'user',
-      groupId: null,
-      created_at: '2024-03-20T10:00:00Z'
+      groupId: '1'
     },
     {
       id: '2',
       name: 'Jane Smith',
       email: 'jane@example.com',
+      group_id: null,
+      created_at: '2024-03-21T00:00:00Z',
       type: 'user',
-      groupId: '1',
-      created_at: '2024-03-21T10:00:00Z'
+      groupId: null
     }
   ];
 
@@ -118,19 +35,19 @@ describe('UserTable', () => {
     {
       id: '1',
       name: 'Test Group',
-      type: 'group',
       parent_id: null,
-      level: 0,
-      users: [],
       children: [],
-      created_at: '2024-03-20T10:00:00Z',
-      updated_at: '2024-03-20T10:00:00Z'
+      users: [],
+      type: 'group',
+      level: 0,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
     }
   ];
   
   // Mock event dispatch handlers
-  const mockUserEdit = vi.fn();
-  const mockUserDelete = vi.fn();
+  const mockOnUserEdit = vi.fn();
+  const mockOnUserDelete = vi.fn();
   
   // Target DOM element that will be shared across tests
   let target: HTMLDivElement;
@@ -159,183 +76,261 @@ describe('UserTable', () => {
   });
 
   it('renders user table with correct data', () => {
-    const { container } = render(UserTable, {
+    const { container, getByText, getAllByRole } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups
-      },
-      target
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
+      }
     });
     
-    // Check if user names are displayed
-    expect(container.textContent).toContain('John Doe');
-    expect(container.textContent).toContain('Jane Smith');
-    
-    // Check if emails are displayed
-    expect(container.textContent).toContain('john@example.com');
-    expect(container.textContent).toContain('jane@example.com');
-    
-    // Check if headers are displayed
-    expect(container.textContent).toContain('Name');
-    expect(container.textContent).toContain('Email');
-    expect(container.textContent).toContain('Group');
+    // Check if headers are present using getByRole for column headers
+    expect(getAllByRole('columnheader', { name: /Name/i })[0]).toBeTruthy();
+    expect(getAllByRole('columnheader', { name: /Email/i })[0]).toBeTruthy();
+    expect(getAllByRole('columnheader', { name: /Group/i })[0]).toBeTruthy();
+    expect(getAllByRole('columnheader', { name: /Created/i })[0]).toBeTruthy();
+    expect(getAllByRole('columnheader', { name: /Actions/i })[0]).toBeTruthy();
+
+    // Check if user data is displayed
+    expect(getByText('John Doe')).toBeTruthy();
+    expect(getByText('john@example.com')).toBeTruthy();
+    expect(getByText('Jane Smith')).toBeTruthy();
+    expect(getByText('jane@example.com')).toBeTruthy();
   });
 
   it('sorts users by name when clicking name header', async () => {
-    const { container } = render(UserTable, {
+    const { container, getByText } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups
-      },
-      target
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
+      }
     });
     
-    // Find the name header cell and click it
-    const headers = container.querySelectorAll('[role="columnheader"]');
-    const nameHeader = Array.from(headers).find(header => header.textContent.includes('Name'));
-    
-    // First click to sort ascending
+    // Find and click the name header using more flexible text matching
+    const nameHeader = getByText(/Name/i);
     await fireEvent.click(nameHeader);
-    // Second click to sort descending
+
+    // Get all user names in the table
+    const userNames = Array.from(container.querySelectorAll('tbody tr'))
+      .map(row => row.querySelector('td:first-child')?.textContent?.trim());
+
+    // Check if names are sorted alphabetically (ascending by default)
+    expect(userNames).toEqual(['Jane Smith', 'John Doe']);
+
+    // Click again to sort in descending order
     await fireEvent.click(nameHeader);
-    
-    // Wait for the component to update
-    await tick();
-    
-    // Check that the component contains names in the expected order after sorting
-    const html = container.innerHTML;
-    // Since we're using string content checking, verify that Jane appears before John in the HTML
-    const janeIndex = html.indexOf('Jane Smith');
-    const johnIndex = html.indexOf('John Doe');
-    expect(janeIndex).toBeLessThan(johnIndex);
+    const userNamesDesc = Array.from(container.querySelectorAll('tbody tr'))
+      .map(row => row.querySelector('td:first-child')?.textContent?.trim());
+    expect(userNamesDesc).toEqual(['John Doe', 'Jane Smith']);
   });
 
   it('sorts users by creation date when clicking created header', async () => {
-    const { container } = render(UserTable, {
+    const { container, getByText } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups
-      },
-      target
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
+      }
     });
     
-    // Find the created date header cell and click it
-    const headers = container.querySelectorAll('[role="columnheader"]');
-    const createdHeader = Array.from(headers).find(header => header.textContent.includes('Created'));
-    
-    // Click to sort ascending
+    // Find and click the created header using more flexible text matching
+    const createdHeader = getByText(/Created/i);
     await fireEvent.click(createdHeader);
-    
-    // Wait for the component to update
-    await tick();
-    
-    // Check that the component contains names in the expected order after sorting
-    const html = container.innerHTML;
-    // Since we're using string content checking, verify that John appears before Jane in the HTML
-    const johnIndex = html.indexOf('John Doe');
-    const janeIndex = html.indexOf('Jane Smith');
-    expect(johnIndex).toBeLessThan(janeIndex);
+
+    // Get all user names in the table
+    const userNames = Array.from(container.querySelectorAll('tbody tr'))
+      .map(row => row.querySelector('td:first-child')?.textContent?.trim());
+
+    // Check if names are sorted by creation date (ascending by default)
+    expect(userNames).toEqual(['John Doe', 'Jane Smith']);
+
+    // Click again to sort in descending order
+    await fireEvent.click(createdHeader);
+    const userNamesDesc = Array.from(container.querySelectorAll('tbody tr'))
+      .map(row => row.querySelector('td:first-child')?.textContent?.trim());
+    expect(userNamesDesc).toEqual(['Jane Smith', 'John Doe']);
   });
 
   it('displays group name for users in a group', () => {
     const { container } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups
-      },
-      target
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
+      }
     });
-    
-    // Check if group name is displayed
-    expect(container.textContent).toContain('Test Group');
+
+    // Check if group name is displayed for John Doe
+    const groupCells = container.querySelectorAll('tbody tr td:nth-child(3)');
+    expect(groupCells[1]?.textContent?.trim()).toBe('Test Group');
+
+    // Check if "None" is displayed for Jane Smith
+    expect(groupCells[0]?.textContent?.trim()).toBe('None');
   });
 
   it('shows edit form when edit button is clicked', async () => {
     const { container } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups
-      },
-      target
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
+      }
     });
-    
-    // Find and click the edit button for the first user
-    const buttons = container.querySelectorAll('[role="button"]');
-    const editButtons = Array.from(buttons).filter(button => button.textContent.includes('edit'));
-    
-    // Click the first edit button (for John Doe)
-    await fireEvent.click(editButtons[0]);
-    
-    // Wait for state updates (double tick to ensure all updates are processed)
-    await tick();
-    await tick(); // Sometimes needs two ticks for all updates
-    
-    // Check if edit form is visible by looking for input fields with user data
-    const nameInput = container.querySelector('input[type="text"]');
-    const emailInput = container.querySelector('input[type="email"]');
-    const groupSelect = container.querySelector('select');
-    
+
+    // Find the row for John Doe
+    const rows = Array.from(container.querySelectorAll('tbody tr'));
+    const johnRow = rows.find(row => row.textContent?.includes('John Doe'));
+    if (!johnRow) throw new Error('John Doe row not found');
+    const editButton = johnRow.querySelector('button.edit-button');
+    if (!editButton) throw new Error('Edit button not found');
+    await fireEvent.click(editButton);
+
+    // Check if edit form is shown
+    const nameInput = container.querySelector('input.edit-input[type="text"]');
+    const emailInput = container.querySelector('input.edit-input[type="email"]');
+    const groupSelect = container.querySelector('select.group-select');
+
     expect(nameInput).toBeTruthy();
     expect(emailInput).toBeTruthy();
     expect(groupSelect).toBeTruthy();
-    expect(nameInput.value).toBe('John Doe');
-    expect(emailInput.value).toBe('john@example.com');
+
+    // Check if form is pre-filled with user data
+    expect(nameInput).toHaveValue('John Doe');
+    expect(emailInput).toHaveValue('john@example.com');
+    expect(groupSelect).toHaveValue('1');
   });
-  
+
   it('dispatches userEdit event when save is clicked', async () => {
-    const { container, component } = render(UserTable, {
+    const { container } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups
-      },
-      target
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
+      }
     });
-    
-    // Listen for the userEdit event
-    component.$on('userEdit', mockUserEdit);
-    
-    // Find and click the edit button for the first user
-    const buttons = container.querySelectorAll('[role="button"]');
-    const editButtons = Array.from(buttons).filter(button => button.textContent.includes('edit'));
-    await fireEvent.click(editButtons[0]);
-    
-    // Wait for the form to appear with multiple ticks
-    await tick();
-    await tick(); 
-    
-    // Find the input fields and update them
-    const inputs = container.querySelectorAll('input');
-    const nameInput = container.querySelector('input[type="text"]');
-    const emailInput = container.querySelector('input[type="email"]');
-    
-    // Update the input values
+
+    // Find the row for John Doe
+    const rows = Array.from(container.querySelectorAll('tbody tr'));
+    const johnRow = rows.find(row => row.textContent?.includes('John Doe'));
+    if (!johnRow) throw new Error('John Doe row not found');
+    const editButton = johnRow.querySelector('button.edit-button');
+    if (!editButton) throw new Error('Edit button not found');
+    await fireEvent.click(editButton);
+
+    // Find and fill edit form
+    const nameInput = container.querySelector('input.edit-input[type="text"]');
+    const emailInput = container.querySelector('input.edit-input[type="email"]');
+    const groupSelect = container.querySelector('select.group-select');
+
+    if (!nameInput || !emailInput || !groupSelect) throw new Error('Edit form fields not found');
+
     await fireEvent.input(nameInput, { target: { value: 'John Updated' } });
     await fireEvent.input(emailInput, { target: { value: 'john.updated@example.com' } });
-    
-    // Find the group select and update it
-    const groupSelect = container.querySelector('select');
     await fireEvent.change(groupSelect, { target: { value: '1' } });
-    
-    // Wait for value updates to propagate
-    await tick();
-    
-    // Find and click the save button
-    const saveButton = Array.from(container.querySelectorAll('[role="button"]'))
-      .find(button => button.textContent.includes('save'));
+
+    // Find and click save button
+    const saveButton = container.querySelector('button.edit-button i.material-icons');
+    if (!saveButton) throw new Error('Save button not found');
     await fireEvent.click(saveButton);
-    
-    // Wait for the component to update with multiple ticks
-    await tick();
-    await tick();
-    
-    // Check if userEdit event was dispatched with correct data
-    expect(mockUserEdit).toHaveBeenCalledWith(expect.objectContaining({
-      detail: {
-        userId: '1',
-        name: 'John Updated',
-        email: 'john.updated@example.com',
-        groupId: '1'
+
+    // Check if onUserEdit was called with correct data
+    expect(mockOnUserEdit).toHaveBeenCalledWith('1', 'John Updated', 'john.updated@example.com', '1');
+  });
+
+  it('dispatches userDelete event when delete button is clicked', async () => {
+    const { container } = render(UserTable, {
+      props: {
+        users: mockUsers,
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
       }
-    }));
+    });
+
+    // Find the row for John Doe
+    const rows = Array.from(container.querySelectorAll('tbody tr'));
+    const johnRow = rows.find(row => row.textContent?.includes('John Doe'));
+    if (!johnRow) throw new Error('John Doe row not found');
+    const deleteButton = johnRow.querySelector('button.delete-button');
+    if (!deleteButton) throw new Error('Delete button not found');
+    await fireEvent.click(deleteButton);
+
+    // Check if onUserDelete was called with correct user ID
+    expect(mockOnUserDelete).toHaveBeenCalledWith('1');
+  });
+
+  it('cancels edit mode when cancel button is clicked', async () => {
+    const { container } = render(UserTable, {
+      props: {
+        users: mockUsers,
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
+      }
+    });
+
+    // Find the row for John Doe
+    const rows = Array.from(container.querySelectorAll('tbody tr'));
+    const johnRow = rows.find(row => row.textContent?.includes('John Doe'));
+    if (!johnRow) throw new Error('John Doe row not found');
+    const editButton = johnRow.querySelector('button.edit-button');
+    if (!editButton) throw new Error('Edit button not found');
+    await fireEvent.click(editButton);
+
+    // Check if edit form is shown
+    const nameInput = container.querySelector('input.edit-input[type="text"]');
+    expect(nameInput).toBeTruthy();
+
+    // Find and click cancel button
+    const cancelButton = container.querySelector('button.delete-button i.material-icons');
+    if (!cancelButton) throw new Error('Cancel button not found');
+    await fireEvent.click(cancelButton);
+
+    // Check if edit form is hidden
+    const nameInputAfterCancel = container.querySelector('input.edit-input[type="text"]');
+    expect(nameInputAfterCancel).toBeFalsy();
+
+    // Check if original data is displayed in John Doe's row
+    const johnRowAfter = Array.from(container.querySelectorAll('tbody tr')).find(row => row.textContent?.includes('John Doe'));
+    expect(johnRowAfter?.querySelector('td:first-child')?.textContent?.trim()).toBe('John Doe');
+  });
+
+  it('displays empty state message when no users exist', () => {
+    const { getByText } = render(UserTable, {
+      props: {
+        users: [],
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
+      }
+    });
+
+    expect(getByText('No users found. Create your first user above!')).toBeTruthy();
+  });
+
+  it('maintains table structure in responsive view', () => {
+    const { container } = render(UserTable, {
+      props: {
+        users: mockUsers,
+        groups: mockGroups,
+        onUserEdit: mockOnUserEdit,
+        onUserDelete: mockOnUserDelete
+      }
+    });
+
+    // Check if table has responsive container
+    const tableContainer = container.querySelector('.table-section');
+    expect(tableContainer).toBeTruthy();
+
+    // Check if table has SMUI DataTable class
+    const table = container.querySelector('.mdc-data-table');
+    expect(table).toBeTruthy();
   });
 }); 

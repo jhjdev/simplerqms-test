@@ -14,11 +14,26 @@
 
   let name = '';
   let email = '';
+  let localError = '';
   
+  function validateEmail(email: string) {
+    // Simple email regex
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
   async function handleSubmit() {
+    localError = '';
+    if (!name.trim() || !email.trim()) {
+      localError = 'Name and email are required.';
+      return;
+    }
+    if (!validateEmail(email)) {
+      localError = 'Please enter a valid email address.';
+      return;
+    }
     await onSubmit(name, email);
-    // Clear form if no error message is present (meaning submission was successful)
-    if (!errorMessage) {
+    // Clear form if submission was successful (successMessage is set)
+    if (successMessage && !errorMessage) {
       name = '';
       email = '';
     }
@@ -37,6 +52,10 @@
       <div class="success-message">{successMessage}</div>
     {/if}
     
+    {#if localError}
+      <div class="error-message">{localError}</div>
+    {/if}
+    
     <div class="form-fields-container">
       <span>Full Name:</span>
       <div class="form-field">
@@ -44,6 +63,7 @@
           bind:value={name}
           required
           disabled={isLoading}
+          data-testid="name-input"
         />
       </div>
       <span>Email Address:</span>
@@ -53,18 +73,20 @@
           type="email"
           required
           disabled={isLoading}
+          data-testid="email-input"
         />
       </div>
     </div>
   </Content>
   <Actions>
-    <form onsubmit={e => { e.preventDefault(); handleSubmit(); }}>
+    <form on:submit={e => { e.preventDefault(); handleSubmit(); }} data-testid="user-form">
       <Button 
         variant="raised" 
         type="submit"
         disabled={isLoading}
         class="create-user-button"
         color="primary"
+        data-testid="submit-button"
       >
       {isLoading ? 'Saving...' : 'Create User'}
     </Button>

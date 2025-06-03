@@ -271,5 +271,52 @@
 {/if}
 
 <style>
-  /* Remove all inline styles as they are now in CreateEntityForm.css */
+  .dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .dialog {
+    background: white;
+    border-radius: 4px;
+    padding: 20px;
+    min-width: 300px;
+    max-width: 500px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .success-dialog {
+    border-top: 4px solid var(--color-success);
+  }
+
+  .error-dialog {
+    border-top: 4px solid var(--color-error);
+  }
+
+  .dialog-header {
+    margin-bottom: 15px;
+  }
+
+  .dialog-header h3 {
+    margin: 0;
+    color: var(--color-text);
+  }
+
+  .dialog-content {
+    margin-bottom: 20px;
+    color: var(--color-text);
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
 </style>
