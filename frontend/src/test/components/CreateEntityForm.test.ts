@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import { render, fireEvent } from '@testing-library/svelte';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { tick } from 'svelte';
 import CreateEntityForm from '../../components/CreateEntityForm.svelte';
 import type { Group } from '../../types';
 
@@ -52,7 +53,7 @@ describe('CreateEntityForm', () => {
     expect(getByText('Create a new user')).toBeTruthy();
   });
 
-  it('shows loading state and individual fields are disabled', () => {
+  it('shows loading state and individual fields are disabled', async () => {
     const { container } = render(CreateEntityForm, {
       props: {
         groups: mockGroups,
@@ -60,36 +61,24 @@ describe('CreateEntityForm', () => {
         isLoading: true
       }
     });
-
-    // Check SMUI textfield disabled state
-    const textfields = container.querySelectorAll('.mdc-text-field');
-    textfields.forEach(textfield => {
-      expect(textfield).toHaveClass('mdc-text-field--disabled');
+    
+    // Check if the submit buttons are disabled
+    const userSubmitButton = container.querySelector('[data-testid="create-user-button"]');
+    const groupSubmitButton = container.querySelector('[data-testid="create-group-button"]');
+    expect(userSubmitButton).toHaveAttribute('disabled');
+    expect(groupSubmitButton).toHaveAttribute('disabled');
+    
+    // Check if the input fields are disabled
+    const inputs = container.querySelectorAll('input');
+    inputs.forEach(input => {
+      expect(input).toHaveAttribute('disabled');
     });
     
-    // Check SMUI select disabled state
-    const selects = container.querySelectorAll('.mdc-select');
+    // Check if the select fields are disabled
+    const selects = container.querySelectorAll('.mdc-select__anchor');
     selects.forEach(select => {
-      expect(select).toHaveClass('mdc-select--disabled');
+      expect(select).toHaveAttribute('aria-disabled', 'true');
     });
-    
-    // Check specific fields by testid
-    const userNameInput = container.querySelector('[data-testid="user-name-input"]');
-    const userEmailInput = container.querySelector('[data-testid="user-email-input"]');
-    const groupNameInput = container.querySelector('[data-testid="group-name-input"]');
-    const parentGroupSelect = container.querySelector('[data-testid="parent-group-select"]');
-    
-    expect(userNameInput?.querySelector('.mdc-text-field')).toHaveClass('mdc-text-field--disabled');
-    expect(userEmailInput?.querySelector('.mdc-text-field')).toHaveClass('mdc-text-field--disabled');
-    expect(groupNameInput?.querySelector('.mdc-text-field')).toHaveClass('mdc-text-field--disabled');
-    expect(parentGroupSelect?.querySelector('.mdc-select')).toHaveClass('mdc-select--disabled');
-    
-    // Check button states
-    const createGroupButton = container.querySelector('[data-testid="create-group-button"]');
-    const createUserButton = container.querySelector('[data-testid="create-user-button"]');
-    
-    expect(createGroupButton).toHaveAttribute('disabled');
-    expect(createUserButton).toHaveAttribute('disabled');
   });
 
   it('handles user form submission', async () => {
@@ -145,20 +134,30 @@ describe('CreateEntityForm', () => {
       }
     });
     
-    // Try to submit the form with empty fields
+    // Try to submit the form without filling in required fields
     const form = container.querySelector('[data-testid="user-form"]');
-    if (!form) throw new Error('Form not found');
+    if (!form) throw new Error('User form not found');
+    
+    // Prevent the default form submission
+    form.addEventListener('submit', (e) => e.preventDefault());
     await fireEvent.submit(form);
     
     // Check that the form validation prevented submission
     expect(mockOnUserSubmit).not.toHaveBeenCalled();
     
-    // Check required attributes on the actual input elements
+    // Fill in required fields
     const nameInput = container.querySelector('[data-testid="user-name-input"] input');
     const emailInput = container.querySelector('[data-testid="user-email-input"] input');
     if (!nameInput || !emailInput) throw new Error('Input fields not found');
-    expect(nameInput).toHaveAttribute('required');
-    expect(emailInput).toHaveAttribute('required');
+    
+    await fireEvent.input(nameInput, { target: { value: 'John Doe' } });
+    await fireEvent.input(emailInput, { target: { value: 'john@example.com' } });
+    
+    // Submit the form again
+    await fireEvent.submit(form);
+    
+    // Now the form should submit
+    expect(mockOnUserSubmit).toHaveBeenCalledWith('John Doe', 'john@example.com', null);
   });
   
   it('handles group selection in user form', async () => {
@@ -170,22 +169,32 @@ describe('CreateEntityForm', () => {
       }
     });
     
-    // Find input fields
+    // Fill in the form fields
     const nameInput = container.querySelector('[data-testid="user-name-input"] input');
     const emailInput = container.querySelector('[data-testid="user-email-input"] input');
-    const groupSelect = container.querySelector('[data-testid="user-group-select"] select');
+    const groupSelect = container.querySelector('[data-testid="user-group-select"] .mdc-select__anchor');
+    
     if (!nameInput || !emailInput || !groupSelect) throw new Error('Form fields not found');
     
-    // Simulate user input
     await fireEvent.input(nameInput, { target: { value: 'John Doe' } });
     await fireEvent.input(emailInput, { target: { value: 'john@example.com' } });
     
-    // Simulate group selection
-    await fireEvent.change(groupSelect, { target: { value: '1' } });
+    // Click the select to open the menu
+    await fireEvent.click(groupSelect);
+    await tick();
+    
+    // Select the first group option
+    const option = container.querySelector('[data-testid="user-group-select"] .mdc-deprecated-list-item[data-value="1"]');
+    if (!option) throw new Error('Group option not found');
+    await fireEvent.click(option);
+    
+    // Wait for the select to update
+    await tick();
+    await tick(); // Add another tick to ensure all state updates are processed
     
     // Submit the form
     const form = container.querySelector('[data-testid="user-form"]');
-    if (!form) throw new Error('Form not found');
+    if (!form) throw new Error('User form not found');
     await fireEvent.submit(form);
     
     // Check correct values were submitted
@@ -201,21 +210,33 @@ describe('CreateEntityForm', () => {
       }
     });
     
-    // Find input fields
-    const groupNameInput = container.querySelector('[data-testid="group-name-input"] input');
-    const parentGroupSelect = container.querySelector('[data-testid="parent-group-select"] select');
-    if (!groupNameInput || !parentGroupSelect) throw new Error('Form fields not found');
+    // Fill in the form fields
+    const nameInput = container.querySelector('[data-testid="group-name-input"] input');
+    const parentSelect = container.querySelector('[data-testid="parent-group-select"] .mdc-select__anchor');
     
-    // Simulate user input
-    await fireEvent.input(groupNameInput, { target: { value: 'New Group' } });
-    await fireEvent.change(parentGroupSelect, { target: { value: '1' } });
+    if (!nameInput || !parentSelect) throw new Error('Form fields not found');
+    
+    await fireEvent.input(nameInput, { target: { value: 'New Group' } });
+    
+    // Click the select to open the menu
+    await fireEvent.click(parentSelect);
+    await tick();
+    
+    // Select the first group option
+    const option = container.querySelector('[data-testid="parent-group-select"] .mdc-deprecated-list-item[data-value="1"]');
+    if (!option) throw new Error('Parent group option not found');
+    await fireEvent.click(option);
+    
+    // Wait for the select to update
+    await tick();
+    await tick(); // Add another tick to ensure all state updates are processed
     
     // Submit the form
     const form = container.querySelector('[data-testid="group-form"]');
-    if (!form) throw new Error('Form not found');
+    if (!form) throw new Error('Group form not found');
     await fireEvent.submit(form);
     
-    // Check that fetch was called with correct data
+    // Check that fetch was called with correct values
     expect(window.fetch).toHaveBeenCalledWith('/api/groups', {
       method: 'POST',
       headers: {
@@ -223,8 +244,8 @@ describe('CreateEntityForm', () => {
       },
       body: JSON.stringify({
         name: 'New Group',
-        parentId: '1',
-      }),
+        parentId: '1'
+      })
     });
   });
   
@@ -355,10 +376,16 @@ describe('CreateEntityForm', () => {
     
     // Focus the button
     createGroupButton.focus();
+    await tick();
+    
+    // Check if the button is focused
     expect(document.activeElement).toBe(createGroupButton);
     
     // Blur the button
     createGroupButton.blur();
+    await tick();
+    
+    // Check if the button is not focused
     expect(document.activeElement).not.toBe(createGroupButton);
   });
   
