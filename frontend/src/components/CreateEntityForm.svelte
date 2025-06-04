@@ -34,6 +34,20 @@
 
   async function handleUserSubmit(e: Event) {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!userName.trim() || !userEmail.trim()) {
+      showDialog('error', 'Name and email are required');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail)) {
+      showDialog('error', 'Please enter a valid email address');
+      return;
+    }
+
     console.log('Form submission values:', { userName, userEmail, userGroupId });
     await onUserSubmit(userName, userEmail, userGroupId || null);
     // Clear form if no error message is present

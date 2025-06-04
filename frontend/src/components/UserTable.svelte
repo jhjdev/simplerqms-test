@@ -34,7 +34,7 @@
       sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
       sortField = field;
-      sortDirection = 'asc';
+      sortDirection = 'desc'; // Default to descending order
     }
   }
 
@@ -63,12 +63,13 @@
     editingUserId = user.id;
     editName = user.name;
     editEmail = user.email;
-    const group = getUserGroup(user.id);
-    editGroupId = group ? group.id : null;
+    editGroupId = user.group_id || null;
   }
 
   function handleDelete(user: User): void {
-    dispatch('userDelete', { userId: user.id });
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      dispatch('userDelete', { userId: user.id });
+    }
   }
 
   function handleSave(user: User): void {
