@@ -7,9 +7,13 @@ declare module "*.svelte" {
 }
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
+  type: string;
+  groupId?: string;
+  group_id?: string;
+  group_name?: string;
   created_at?: string;
   updated_at?: string;
 }

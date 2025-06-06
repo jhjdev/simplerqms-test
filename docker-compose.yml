@@ -1,102 +1,143 @@
-name: 'simplerqms-test'
+version: '3.8'
 
 services:
+  # Database service
   postgres:
     image: postgres:17-alpine
     ports:
       - 5432:5432
     restart: always
     environment:
-      - POSTGRES_PASSWORD=PPk4nz5Zd1csikqjqnsc
-      - POSTGRES_USER=backend
-      - POSTGRES_DB=simplerqms_test_db
+      POSTGRES_PASSWORD: PPk4nz5Zd1csikqjqnsc
+      POSTGRES_USER: backend
+      POSTGRES_DB: simplerqms_test_db
     volumes:
-      - './init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql'
-      # Uncomment the following line to enable data persistence between container restarts
-      # - 'postgres_data:/var/lib/postgresql/data'
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_schema.sql:/docker-entrypoint-initdb.d/init_schema.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U backend -d simplerqms_test_db']
       interval: 3s
       timeout: 3s
       retries: 5
 
+  # Backend API service
   node:
     image: node:20.11.1-alpine
-    restart: 'always'
     ports:
-      - '3000:3000'
+      - 3000:3000
     volumes:
-      - './node:/app'
-      - /app/node_modules
-    working_dir: /app
-    command: npm run live
+      - ./node:/app
+      - ./ssl:/app/ssl
     environment:
-      - DATABASE_PASSWORD=PPk4nz5Zd1csikqjqnsc
+      - NODE_ENV=development
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=backend
+      - POSTGRES_PASSWORD=PPk4nz5Zd1csikqjqnsc
+      - POSTGRES_DB=simplerqms_test_db
+    working_dir: /app
+    command: sh -c "npm install --legacy-peer-deps && npm run build && npm start"
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          '--no-check-certificate',
+          'https://127.0.0.1:3000/health',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       postgres:
-        condition: 'service_healthy'
+        condition: service_healthy
 
+  # Backend test service
   node-test:
     image: node:20.11.1-alpine
     volumes:
-      - './node:/app'
+      - ./node:/app
       - /app/node_modules
     working_dir: /app
     command: sh -c "npm install && npm test"
     environment:
+      - NODE_ENV=test
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=backend
+      - POSTGRES_PASSWORD=PPk4nz5Zd1csikqjqnsc
+      - POSTGRES_DB=simplerqms_test_db
       - DATABASE_PASSWORD=PPk4nz5Zd1csikqjqnsc
     depends_on:
       postgres:
-        condition: 'service_healthy'
+        condition: service_healthy
 
+  # Rails API service (commented out for future use)
   # rails:
   #   image: "simplerqms-test/rails_api:latest"
   #   build:
   #     context: "./rails_api"
   #     dockerfile: "Dockerfile"
-  #   restart: "always"
+  #   restart: always
   #   ports:
-  #     - "3000:3000"
+  #     - 3000:3000
   #   volumes:
   #     - "./rails_api:/usr/src/app"
   #   environment:
-  #     - DATABASE_URL=postgresql://backend:PPk4nz5Zd1csikqjqnsc@postgres/simplerqms_test_db
-  #     - RAILS_LOG_LEVEL=debug
+  #     DATABASE_URL: postgresql://postgres:postgres@postgres/simplerqms
+  #     RAILS_LOG_LEVEL: debug
   #   depends_on:
   #     postgres:
-  #       condition: "service_healthy"
+  #       condition: service_healthy
 
+  # Golang API service (commented out for future use)
   # golang:
   #   image: "simplerqms-test/golang:latest"
   #   build:
   #     context: "./golang"
   #     dockerfile: Dockerfile
   #   ports:
-  #     - "3000:3000"
+  #     - 3000:3000
   #   volumes:
   #     - ./golang:/app
   #   environment:
-  #     - DATABASE_URL=postgresql://backend:PPk4nz5Zd1csikqjqnsc@postgres/simplerqms_test_db
+  #     DATABASE_URL: postgresql://postgres:postgres@postgres/simplerqms
   #   depends_on:
   #     postgres:
-  #       condition: "service_healthy"
+  #       condition: service_healthy
 
+  # Frontend service
   frontend:
     image: node:20.11.1-alpine
-    working_dir: /app
-    command: sh -c "npm install --legacy-peer-deps && npm run dev"
-    restart: always
     ports:
-      - '5173:5173'
+      - 5173:5173
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - ./ssl:/app/ssl
     environment:
+      - VITE_API_URL=https://localhost:3000
       - VITE_HOST=0.0.0.0
       - VITE_PORT=5173
       - HOST=0.0.0.0
       - PORT=5173
+    working_dir: /app
+    command: sh -c "npm install --legacy-peer-deps && npm run dev -- --host 0.0.0.0"
+    healthcheck:
+      test: ['CMD', 'pgrep', '-f', 'vite']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: always
+    depends_on:
+      node:
+        condition: service_healthy
 
+  # Frontend test service
   frontend-test:
     image: node:20.11.1-alpine
     working_dir: /app
@@ -105,10 +146,10 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_HOST=0.0.0.0
-      - VITE_PORT=5173
-      - HOST=0.0.0.0
-      - PORT=5173
-# Uncomment this section to enable data persistence
-# volumes:
-#   postgres_data:
+      VITE_HOST: 0.0.0.0
+      VITE_PORT: 5173
+      HOST: 0.0.0.0
+      PORT: 5173
+
+volumes:
+  postgres_data:

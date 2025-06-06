@@ -14,9 +14,9 @@
   export let successMessage = '';
 
   // User form state
-  let userName = '';
-  let userEmail = '';
-  let userGroupId = '';
+  export let userName = '';
+  export let userEmail = '';
+  export let userGroupId = '';
 
   // Group form state
   let groupName = '';
@@ -32,8 +32,25 @@
 
   const dispatch = createEventDispatcher();
 
-  async function handleUserSubmit(e: Event) {
-    e.preventDefault();
+  // Function to flatten group hierarchy for select options
+  function flattenGroups(groups: Group[], level = 0): { id: string; name: string; level: number }[] {
+    let result: { id: string; name: string; level: number }[] = [];
+    
+    for (const group of groups) {
+      result.push({ id: group.id, name: '  '.repeat(level) + group.name, level });
+      if (group.children && group.children.length > 0) {
+        result = result.concat(flattenGroups(group.children, level + 1));
+      }
+    }
+    
+    return result;
+  }
+
+  // Get flattened groups for select options
+  $: flattenedGroups = flattenGroups(groups);
+
+  async function handleUserSubmit(event: Event) {
+    event.preventDefault();
     
     // Validate required fields
     if (!userName.trim() || !userEmail.trim()) {
@@ -48,21 +65,13 @@
       return;
     }
 
-    console.log('Form submission values:', { userName, userEmail, userGroupId });
+    // Call onUserSubmit with the form values
     await onUserSubmit(userName, userEmail, userGroupId || null);
-    // Clear form if no error message is present
-    if (!errorMessage) {
-      userName = '';
-      userEmail = '';
-      userGroupId = '';
-    }
     
-    // Show appropriate dialog if there's a message
-    if (successMessage) {
-      showDialog('success', successMessage);
-    } else if (errorMessage) {
-      showDialog('error', errorMessage);
-    }
+    // Reset form
+    userName = '';
+    userEmail = '';
+    userGroupId = '';
   }
 
   async function handleGroupSubmit(event: Event) {
@@ -80,7 +89,7 @@
         },
         body: JSON.stringify({
           name: groupName,
-          parentId: parentId || null,
+          parent_id: parentId || null,
         }),
       });
 
@@ -155,7 +164,7 @@
                   data-testid="parent-group-select"
                 >
                   <Option value="">None</Option>
-                  {#each groups as group}
+                  {#each flattenedGroups as group}
                     <Option value={group.id}>{group.name}</Option>
                   {/each}
                 </Select>
@@ -216,15 +225,15 @@
 
             <div class="form-field">
               <div class="select-wrapper">
-                <span class="field-label">Assign to Group</span>
+                <span class="field-label">Select Group</span>
                 <Select
                   bind:value={userGroupId}
                   disabled={isLoading}
                   class="select-field"
                   data-testid="user-group-select"
                 >
-                  <Option value="">No group</Option>
-                  {#each groups as group}
+                  <Option value="">None</Option>
+                  {#each flattenedGroups as group}
                     <Option value={group.id}>{group.name}</Option>
                   {/each}
                 </Select>

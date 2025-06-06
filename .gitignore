@@ -38,3 +38,6 @@ data/
 # Package locks (keep only the root one)
 node/package-lock.json
 frontend/package-lock.json
+
+# Vite timestamp files
+vite.config.ts.timestamp-*.mjs

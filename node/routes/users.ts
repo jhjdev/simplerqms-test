@@ -1,204 +1,234 @@
-import express from 'express';
-import type { Request, Response, NextFunction } from 'express';
-import sql from '../utils/db.js';
+import { Router, Request, Response, RequestHandler } from 'express';
+import sql from '../utils/sql.js';
+
+const router = Router();
+
+interface UserParams {
+  id: string;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  type: string;
+  created_at: Date;
+  updated_at: Date;
+}
 
 interface CreateUserRequest {
   name: string;
   email: string;
   type: string;
-  groupId?: string;
+  groupId?: number;
 }
 
-const router = express.Router();
-
 // Get all users
-router.get('/', (req: Request, res: Response, next: NextFunction) => {
-  (async () => {
+router.get('/', (async (_req: Request, res: Response) => {
   try {
-    // Get all users with their groups
-    const usersWithGroups = await sql`
+    const users = await sql`
       SELECT 
-        u.*,
-        array_agg(g.id) FILTER (WHERE g.id IS NOT NULL) as group_ids,
-        array_agg(g.name) FILTER (WHERE g.name IS NOT NULL) as group_names
+        u.id, 
+        u.name, 
+        u.email, 
+        u.type, 
+        u.created_at, 
+        u.updated_at,
+        g.id as group_id,
+        g.name as group_name
       FROM users u
       LEFT JOIN group_members gm ON u.id = gm.member_id AND gm.member_type = 'user'
       LEFT JOIN groups g ON gm.group_id = g.id
-      GROUP BY u.id
+      ORDER BY u.id
     `;
-    
-    // Transform the result to match the expected format
-    const users = usersWithGroups.map(user => {
-      // If user has groups, use the first one consistently
-      const hasGroups = user.group_ids && user.group_ids.length > 0;
-      return {
-        ...user,
-        group_id: hasGroups ? user.group_ids[0] : null,
-        group_name: hasGroups ? user.group_names[0] : null,
-        // Remove the arrays to keep the response clean
-        group_ids: undefined,
-        group_names: undefined
-      };
-    });
-    res.json(users);
+
+    // Format the response to include group information
+    const formattedUsers = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      type: user.type,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+      group_id: user.group_id,
+      group_name: user.group_name,
+    }));
+
+    res.json(formattedUsers);
   } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    console.error('Error getting users:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-  })().catch(next);
-});
+}) as RequestHandler);
+
+// Create a new user
+router.post('/', (async (req: Request, res: Response) => {
+  const { name, email, type = 'user' } = req.body;
+
+  if (!name || !email) {
+    return res.status(400).json({ error: 'name and email are required' });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  try {
+    const result = await sql`
+      INSERT INTO users (name, email)
+      VALUES (${name}, ${email})
+      RETURNING id, name, email, created_at
+    `;
+
+    const user = result[0];
+
+    // If a group is specified, add the user to that group
+    if (req.body.groupId) {
+      await sql`
+        INSERT INTO group_members (group_id, member_id, member_type)
+        VALUES (${req.body.groupId}, ${user.id}, 'user')
+      `;
+    }
+
+    res.status(201).json(user);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}) as RequestHandler);
 
 // Update a user
-router.patch('/:id', (req: Request, res: Response, next: NextFunction) => {
-  (async () => {
+router.patch('/:id', (async (req: Request<UserParams>, res: Response) => {
+  const { id } = req.params;
+  const { name, email, groupId } = req.body;
+
+  if (!name && !email && !groupId) {
+    return res.status(400).json({ error: 'No fields to update' });
+  }
+
   try {
-    const { id } = req.params;
-    const { name, email, groupId } = req.body;
-    console.log('Updating user:', { id, name, email, groupId });
-
-    // Update user details
-    const result = await sql`
-      UPDATE users
-      SET name = ${name}, email = ${email}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${id}
-      RETURNING id, name, email
+    // Check if user exists
+    const [user] = await sql`
+      SELECT id FROM users WHERE id = ${id}
     `;
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-    if (result.length === 0) {
-      res.status(404).json({ error: 'User not found' });
-      return;
+    // Update user fields
+    if (name || email) {
+      await sql`
+        UPDATE users
+        SET ${sql({
+          name: name || undefined,
+          email: email || undefined,
+          updated_at: new Date(),
+        })}
+        WHERE id = ${id}
+      `;
     }
 
     // Handle group membership
-    // First, remove any existing group memberships
-    await sql`
-      DELETE FROM group_members
-      WHERE member_id = ${id} AND member_type = 'user'
-    `;
-
-    // If a group is specified, add the user to that group
     if (groupId) {
-      console.log('Adding user to group:', groupId);
+      // Check if group exists
+      const [group] = await sql`
+        SELECT id FROM groups WHERE id = ${groupId}
+      `;
+      if (!group) {
+        return res.status(404).json({ error: 'Group not found' });
+      }
+
+      // Remove user from all groups
+      await sql`
+        DELETE FROM group_members
+        WHERE member_id = ${id}
+        AND member_type = 'user'
+      `;
+
+      // Add user to new group
       await sql`
         INSERT INTO group_members (group_id, member_id, member_type)
         VALUES (${groupId}, ${id}, 'user')
       `;
     }
 
-    // Get updated user with group info
-    const updatedUser = await sql`
-      SELECT 
-        u.*,
-        g.id as group_id,
-        g.name as group_name
+    // Get updated user with group
+    const [updatedUser] = await sql`
+      SELECT u.*, g.id as group_id, g.name as group_name
       FROM users u
-      LEFT JOIN group_members gm ON u.id = gm.member_id AND gm.member_type = 'user'
-      LEFT JOIN groups g ON gm.group_id = g.id
+      LEFT JOIN group_members gm ON gm.member_id = u.id AND gm.member_type = 'user'
+      LEFT JOIN groups g ON g.id = gm.group_id
       WHERE u.id = ${id}
     `;
 
-    res.json(updatedUser[0]);
+    res.json(updatedUser);
   } catch (error) {
     console.error('Error updating user:', error);
-    res.status(500).json({ error: 'Failed to update user' });
+    res.status(500).json({ error: 'Internal server error' });
   }
-  })().catch(next);
-});
+}) as RequestHandler<UserParams>);
 
 // Delete a user
-router.delete('/:id', (req: Request, res: Response, next: NextFunction) => {
-  (async () => {
-  try {
-    const { id } = req.params;
+router.delete('/:id', (async (req: Request<UserParams>, res: Response) => {
+  const { id } = req.params;
 
-    // First delete from group_members
+  try {
+    // Check if user exists
+    const [user] = await sql`
+      SELECT id FROM users WHERE id = ${id}
+    `;
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // First remove the user from all groups
     await sql`
-      DELETE FROM group_members
-      WHERE member_id = ${id} AND member_type = 'user'
+      DELETE FROM group_members 
+      WHERE member_id = ${id} 
+      AND member_type = 'user'
     `;
 
     // Then delete the user
-    const result = await sql`
-      DELETE FROM users
-      WHERE id = ${id}
-      RETURNING id
+    await sql`
+      DELETE FROM users WHERE id = ${id}
     `;
 
-    if (result.length === 0) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-
-    res.json({ message: 'User deleted successfully' });
+    res.status(204).send();
   } catch (error) {
     console.error('Error deleting user:', error);
-    res.status(500).json({ error: 'Failed to delete user' });
+    res.status(500).json({ error: 'Internal server error' });
   }
-  })().catch(next);
-});
+}) as RequestHandler<UserParams>);
 
-// Create a new user
-router.post('/', (req: Request, res: Response, next: NextFunction) => {
-  (async () => {
+// Get user's groups
+router.get('/:id/groups', (async (req: Request<UserParams>, res: Response) => {
+  const { id } = req.params;
+
   try {
-    const { name, email, type, groupId } = req.body;
-    
-    if (!name || !email || !type) {
-      return res.status(400).json({ error: 'Name, email, and type are required' });
+    // Check if user exists
+    const [user] = await sql`
+      SELECT id FROM users WHERE id = ${id}
+    `;
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    if (type !== 'user') {
-      return res.status(400).json({ error: 'Invalid user type' });
-    }
-
-    // Create the user first
-    const result = await sql`
-      INSERT INTO users (name, email, type)
-      VALUES (${name}, ${email}, ${type})
-      RETURNING *
+    const groups = await sql`
+      SELECT g.id, g.name
+      FROM groups g
+      JOIN group_members gm ON g.id = gm.group_id
+      WHERE gm.member_id = ${id}
+      AND gm.member_type = 'user'
+      ORDER BY g.id
     `;
 
-    // If a group is specified, add the user to that group
-    if (groupId) {
-      await sql`
-        INSERT INTO group_members (group_id, member_id, member_type)
-        VALUES (${groupId}, ${result[0].id}, 'user')
-      `;
-    }
-
-    // Return the created user
-    res.json(result[0]);
+    res.json(groups);
   } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: 'Failed to create user' });
+    console.error('Error getting user groups:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-  })().catch(next);
-});
-
-// Check if a user is within a group hierarchy
-router.get('/:id/groups', (req: Request, res: Response, next: NextFunction) => {
-  (async () => {
-  try {
-    const { id } = req.params;
-    const result = await sql`
-      WITH RECURSIVE group_hierarchy AS (
-        SELECT id, parent_id, 0 AS level
-        FROM group_members
-        WHERE member_id = ${id} AND member_type = 'user'
-        UNION ALL
-        SELECT gm.id, gm.parent_id, level + 1
-        FROM group_members gm
-        JOIN group_hierarchy gh ON gm.parent_id = gh.id
-      )
-      SELECT *
-      FROM group_hierarchy
-    `;
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching user groups:', error);
-    res.status(500).json({ error: 'Failed to fetch user groups' });
-  }
-  })().catch(next);
-});
+}) as RequestHandler<UserParams>);
 
 export default router;

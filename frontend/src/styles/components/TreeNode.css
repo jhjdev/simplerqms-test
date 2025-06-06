@@ -178,4 +178,27 @@
     background-color: var(--color-background-dark);
     color: var(--color-text-light);
   }
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  margin-left: 2rem;
+  color: var(--color-text);
+}
+
+.user-item .material-icons {
+  font-size: 1rem;
+  color: var(--color-secondary);
+}
+
+.user-name {
+  font-weight: 500;
+}
+
+.user-email {
+  color: var(--color-secondary);
+  font-size: 0.9em;
 } 

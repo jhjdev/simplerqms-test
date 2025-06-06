@@ -26,6 +26,40 @@ CREATE TABLE group_members (
   CONSTRAINT unique_membership UNIQUE(group_id, member_id, member_type)
 );
 
-INSERT INTO users(name, email) VALUES ('Testy McTestTest Testy Test', 'test@test.com');
-INSERT INTO groups(name) VALUES ('Test Group');
+-- Create test user
+INSERT INTO users(name, email) VALUES ('Test User', 'test@example.com');
+
+-- Create parent group
+INSERT INTO groups(name, parent_id, level) VALUES ('Europe', NULL, 0);
+
+-- Create child groups
+INSERT INTO groups(name, parent_id, level) 
+SELECT 'Denmark', id, 1 
+FROM groups 
+WHERE name = 'Europe';
+
+INSERT INTO groups(name, parent_id, level) 
+SELECT 'Sweden', id, 1 
+FROM groups 
+WHERE name = 'Europe';
+
+-- Add child groups to parent group
+INSERT INTO group_members(group_id, member_id, member_type)
+SELECT p.id, c.id, 'group'
+FROM groups p, groups c
+WHERE p.name = 'Europe' AND c.name = 'Denmark';
+
+INSERT INTO group_members(group_id, member_id, member_type)
+SELECT p.id, c.id, 'group'
+FROM groups p, groups c
+WHERE p.name = 'Europe' AND c.name = 'Sweden';
+
+-- Create test user Lars
+INSERT INTO users(name, email) VALUES ('Lars Larsen', 'lars@larsen.dk');
+
+-- Add Lars to Denmark group
+INSERT INTO group_members(group_id, member_id, member_type)
+SELECT g.id, u.id, 'user'
+FROM groups g, users u
+WHERE g.name = 'Denmark' AND u.email = 'lars@larsen.dk';
 

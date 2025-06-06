@@ -1,10 +1,7 @@
-import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { glob } from 'glob';
+import { Glob } from 'glob';
 import type { Options } from 'swagger-jsdoc';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import swaggerJsdoc from 'swagger-jsdoc';
 
 const options: Options = {
   definition: {
@@ -83,14 +80,14 @@ const options: Options = {
   apis: [], // We'll populate this dynamically
 };
 
-export async function getSpecs() {
+export function getSpecs() {
   try {
     // Find all swagger files
-    const swaggerFiles = await glob('**/*.swagger.ts', { cwd: __dirname });
+    const glob = new Glob('**/*.swagger.ts', { cwd: __dirname });
+    const swaggerFiles = glob.found;
     options.apis = swaggerFiles.map((file: string) => join(__dirname, file));
 
-    const swaggerJsdoc = await import('swagger-jsdoc');
-    return swaggerJsdoc.default(options);
+    return swaggerJsdoc(options);
   } catch (error) {
     console.error('Failed to load swagger-jsdoc:', error);
     return {};

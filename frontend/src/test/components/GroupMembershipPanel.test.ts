@@ -32,15 +32,27 @@ describe('GroupMembershipPanel', () => {
   // Mock fetch API for API calls
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn().mockImplementation(() => 
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({
-          isMember: true,
-          path: ['Group 1', 'Group 2']
-        })
-      })
-    );
+    global.fetch = vi.fn().mockImplementation((url, options) => {
+      if (url.includes('/api/groups/1/check-membership')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            isMember: true,
+            path: ['Group 1', 'Group 2']
+          })
+        });
+      }
+      if (url.includes('/api/groups/1/all-members')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            users: mockUsers,
+            groups: mockGroups
+          })
+        });
+      }
+      return Promise.reject(new Error('Network error'));
+    });
   });
 
   it('renders the panel with correct sections', () => {

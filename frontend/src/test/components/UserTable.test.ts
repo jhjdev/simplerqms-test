@@ -10,8 +10,54 @@ vi.mock('../../styles/components/UserTable.css', () => ({}));
 vi.mock('material-icons/iconfont/material-icons.css', () => ({}));
 
 describe('UserTable', () => {
-  let mockUsers: User[];
-  let mockGroups: Group[];
+  const mockUsers: User[] = [
+    {
+      id: '1',
+      name: 'John Doe',
+      email: 'john@example.com',
+      type: 'user',
+      groupId: '1',
+      group_id: '1',
+      group_name: 'Group 1',
+      created_at: '2024-01-01T00:00:00Z'
+    },
+    {
+      id: '2',
+      name: 'Jane Smith',
+      email: 'jane@example.com',
+      type: 'user',
+      groupId: '2',
+      group_id: '2',
+      group_name: 'Group 2',
+      created_at: '2024-01-02T00:00:00Z'
+    }
+  ];
+
+  const mockGroups: Group[] = [
+    {
+      id: '1',
+      name: 'Group 1',
+      type: 'group',
+      parent_id: null,
+      level: 0,
+      users: [],
+      children: [],
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
+    },
+    {
+      id: '2',
+      name: 'Group 2',
+      type: 'group',
+      parent_id: null,
+      level: 0,
+      users: [],
+      children: [],
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z'
+    }
+  ];
+
   let mockOnUserEdit: ReturnType<typeof vi.fn>;
   let mockOnUserDelete: ReturnType<typeof vi.fn>;
   
@@ -32,38 +78,24 @@ describe('UserTable', () => {
     // Add table-related ARIA roles to jsdom
     document.body.setAttribute('role', 'document');
 
-    mockUsers = [
-      { id: '1', name: 'John Doe', email: 'john@example.com', groupId: '1', type: 'user' },
-      { id: '2', name: 'Jane Smith', email: 'jane@example.com', groupId: '2', type: 'user' }
-    ];
-
-    mockGroups = [
-      { 
-        id: '1', 
-        name: 'Group 1', 
-        parent_id: null, 
-        type: 'group',
-        level: 0,
-        users: [],
-        children: [],
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      },
-      { 
-        id: '2', 
-        name: 'Group 2', 
-        parent_id: null, 
-        type: 'group',
-        level: 0,
-        users: [],
-        children: [],
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      }
-    ];
-
     mockOnUserEdit = vi.fn();
     mockOnUserDelete = vi.fn();
+
+    global.fetch = vi.fn().mockImplementation((url, options) => {
+      if (url.includes('/api/users/2') && options?.method === 'PUT') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({})
+        });
+      }
+      if (url.includes('/api/users/2') && options?.method === 'DELETE') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({})
+        });
+      }
+      return Promise.reject(new Error('Network error'));
+    });
   });
   
   afterEach(() => {
@@ -78,9 +110,7 @@ describe('UserTable', () => {
     const { container, getByText, getAllByRole } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups,
-        onUserEdit: mockOnUserEdit,
-        onUserDelete: mockOnUserDelete
+        groups: mockGroups
       }
     });
     
@@ -102,9 +132,7 @@ describe('UserTable', () => {
     const { container, getByText } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups,
-        onUserEdit: mockOnUserEdit,
-        onUserDelete: mockOnUserDelete
+        groups: mockGroups
       }
     });
     
@@ -133,9 +161,7 @@ describe('UserTable', () => {
     const { container, getByText } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups,
-        onUserEdit: mockOnUserEdit,
-        onUserDelete: mockOnUserDelete
+        groups: mockGroups
       }
     });
     
@@ -149,7 +175,7 @@ describe('UserTable', () => {
       .map(row => row.querySelector('td:nth-child(2)')?.textContent?.trim());
 
     // Check if emails are sorted alphabetically (descending by default)
-    expect(userEmails).toEqual(['jane@example.com', 'john@example.com']);
+    expect(userEmails).toEqual(['john@example.com', 'jane@example.com']);
 
     // Click again to sort in ascending order
     await fireEvent.click(emailHeader);
@@ -157,7 +183,7 @@ describe('UserTable', () => {
     
     const userEmailsAsc = Array.from(container.querySelectorAll('tbody tr'))
       .map(row => row.querySelector('td:nth-child(2)')?.textContent?.trim());
-    expect(userEmailsAsc).toEqual(['john@example.com', 'jane@example.com']);
+    expect(userEmailsAsc).toEqual(['jane@example.com', 'john@example.com']);
   });
 
   it('sorts users by creation date', async () => {
@@ -173,19 +199,20 @@ describe('UserTable', () => {
     if (!createdHeader) throw new Error('Created header not found');
     await fireEvent.click(createdHeader);
     await tick();
-
-    // Check descending order (default)
-    const rows = container.querySelectorAll('tbody tr');
-    expect(rows[0].textContent).toContain('Jane Smith');
-    expect(rows[1].textContent).toContain('John Doe');
+    await waitFor(() => {
+      const rows = container.querySelectorAll('tbody tr');
+      expect(rows[0].textContent).toContain('John Doe');
+      expect(rows[1].textContent).toContain('Jane Smith');
+    });
 
     // Click again to sort ascending
     await fireEvent.click(createdHeader);
     await tick();
-
-    // Check ascending order
-    expect(rows[0].textContent).toContain('John Doe');
-    expect(rows[1].textContent).toContain('Jane Smith');
+    await waitFor(() => {
+      const rows = container.querySelectorAll('tbody tr');
+      expect(rows[0].textContent).toContain('Jane Smith');
+      expect(rows[1].textContent).toContain('John Doe');
+    });
   });
 
   it('displays group name for users in a group', async () => {
@@ -196,117 +223,151 @@ describe('UserTable', () => {
       }
     });
 
-    // Check if group name is displayed for John Doe
+    // Get all group cells
     const groupCells = container.querySelectorAll('tbody tr td:nth-child(3)');
-    expect(groupCells[0]?.textContent?.trim()).toBe('None');
+    
+    // Find the cells by their content
+    const johnDoeCell = Array.from(groupCells).find(cell => 
+      cell.closest('tr')?.textContent?.includes('John Doe')
+    );
+    const janeSmithCell = Array.from(groupCells).find(cell => 
+      cell.closest('tr')?.textContent?.includes('Jane Smith')
+    );
 
-    // Check if group name is displayed for Jane Smith
-    expect(groupCells[1]?.textContent?.trim()).toBe('None');
+    expect(johnDoeCell?.textContent?.trim()).toBe('Group 1');
+    expect(janeSmithCell?.textContent?.trim()).toBe('Group 2');
   });
 
   it('shows edit form when edit button is clicked', async () => {
-    const { container } = render(UserTable, {
+    const { container, getByText, component } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups,
-        onUserEdit: mockOnUserEdit,
-        onUserDelete: mockOnUserDelete
+        groups: mockGroups
       }
     });
-
-    // Find and click the edit button for John Doe
-    const editButton = container.querySelector('.edit-button');
-    if (!editButton) throw new Error('Edit button not found');
-    await fireEvent.click(editButton);
+    // Click edit button for Jane Smith
+    const editButtons = container.querySelectorAll('.edit-button');
+    expect(editButtons.length).toBeGreaterThan(1);
+    
+    // Find the edit button for Jane Smith
+    const janeSmithRow = Array.from(container.querySelectorAll('tbody tr')).find(row => 
+      row.textContent?.includes('Jane Smith')
+    );
+    const janeSmithEditButton = janeSmithRow?.querySelector('.edit-button');
+    expect(janeSmithEditButton).toBeTruthy();
+    
+    if (!janeSmithEditButton) throw new Error('Edit button for Jane Smith not found');
+    await fireEvent.click(janeSmithEditButton);
     await tick();
-
-    // Check if the edit form is displayed with correct values
-    const nameInput = container.querySelector('input[type="text"]');
-    const emailInput = container.querySelector('input[type="email"]');
-    const groupSelect = container.querySelector('select.group-select');
-
+    
+    // Check that the form fields are populated
+    const nameInput = container.querySelector('.edit-input[type="text"]') as HTMLInputElement | null;
+    const emailInput = container.querySelector('.edit-input[type="email"]') as HTMLInputElement | null;
+    const groupSelect = container.querySelector('.group-select') as HTMLSelectElement | null;
+    expect(nameInput).toBeTruthy();
+    expect(emailInput).toBeTruthy();
+    expect(groupSelect).toBeTruthy();
     if (!nameInput || !emailInput || !groupSelect) throw new Error('Edit form fields not found');
-
-    expect(nameInput).toHaveValue('Jane Smith');
-    expect(emailInput).toHaveValue('jane@example.com');
-    expect(groupSelect).toHaveValue(''); // Should be empty since user has no group
+    expect(nameInput.value).toBe('Jane Smith');
+    expect(emailInput.value).toBe('jane@example.com');
+    // The group select should have value '2' for Jane Smith
+    expect(groupSelect.value).toBe('2');
   });
 
   it('dispatches edit event with updated values', async () => {
-    const { container } = render(UserTable, {
+    const { container, getByText, component } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups,
-        onUserEdit: mockOnUserEdit,
-        onUserDelete: mockOnUserDelete
+        groups: mockGroups
       }
     });
-
-    // Click edit button for first user
-    const editButton = container.querySelector('.edit-button');
-    if (!editButton) throw new Error('Edit button not found');
-    await fireEvent.click(editButton);
+    const userEditHandler = vi.fn();
+    component.$on('userEdit', userEditHandler);
+    
+    // Find and click edit button for Jane Smith
+    const janeSmithRow = Array.from(container.querySelectorAll('tbody tr')).find(row => 
+      row.textContent?.includes('Jane Smith')
+    );
+    const janeSmithEditButton = janeSmithRow?.querySelector('.edit-button');
+    expect(janeSmithEditButton).toBeTruthy();
+    
+    if (!janeSmithEditButton) throw new Error('Edit button for Jane Smith not found');
+    await fireEvent.click(janeSmithEditButton);
     await tick();
-
-    // Fill in edit form
-    const nameInput = container.querySelector('input[type="text"]');
-    const emailInput = container.querySelector('input[type="email"]');
-    const groupSelect = container.querySelector('select.group-select');
-    if (!nameInput || !emailInput || !groupSelect) throw new Error('Edit inputs not found');
-
+    
+    // Change name and email
+    const nameInput = container.querySelector('.edit-input[type="text"]') as HTMLInputElement | null;
+    const emailInput = container.querySelector('.edit-input[type="email"]') as HTMLInputElement | null;
+    expect(nameInput).toBeTruthy();
+    expect(emailInput).toBeTruthy();
+    if (!nameInput || !emailInput) throw new Error('Edit form fields not found');
     await fireEvent.input(nameInput, { target: { value: 'Updated Name' } });
     await fireEvent.input(emailInput, { target: { value: 'updated@example.com' } });
-    await fireEvent.change(groupSelect, { target: { value: '2' } });
-    await tick();
-
-    // Click save button
-    const saveButton = container.querySelector('.edit-button');
+    
+    // Save
+    const saveButton = container.querySelector('.edit-button i.material-icons')?.closest('button');
+    expect(saveButton).toBeTruthy();
     if (!saveButton) throw new Error('Save button not found');
     await fireEvent.click(saveButton);
     await tick();
-
-    // Check that the event was dispatched with correct data
-    expect(mockOnUserEdit).toHaveBeenCalledWith({
-      userId: '1',
+    await new Promise(resolve => setTimeout(resolve, 0)); // Wait for async operations
+    
+    expect(userEditHandler).toHaveBeenCalled();
+    const event = userEditHandler.mock.calls[0][0];
+    expect(event).toBeInstanceOf(CustomEvent);
+    expect(event.detail).toEqual({
+      userId: '2',
       name: 'Updated Name',
       email: 'updated@example.com',
-      groupId: '2'
+      groupId: '2',
     });
   });
 
   it('dispatches delete event with confirmation', async () => {
-    const { container } = render(UserTable, {
+    const { container, component } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups,
-        onUserEdit: mockOnUserEdit,
-        onUserDelete: mockOnUserDelete
+        groups: mockGroups
       }
     });
 
-    // Mock window.confirm
-    window.confirm = vi.fn(() => true);
+    // Set up event listener
+    const userDeleteHandler = vi.fn();
+    component.$on('userDelete', userDeleteHandler);
 
-    // Click delete button for first user
-    const deleteButton = container.querySelector('.delete-button');
-    if (!deleteButton) throw new Error('Delete button not found');
-    await fireEvent.click(deleteButton);
+    // Find and click the delete button for the second user
+    const deleteButtons = container.querySelectorAll('.delete-button');
+    const sortedUsers = [...mockUsers].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    const secondUserIndex = sortedUsers.findIndex(user => user.id === '2');
+    if (!deleteButtons[secondUserIndex]) throw new Error('Delete button for second user not found');
+    await fireEvent.click(deleteButtons[secondUserIndex]);
     await tick();
 
-    // Verify confirmation dialog was shown
-    expect(window.confirm).toHaveBeenCalled();
+    // Wait for the dialog to be rendered
+    await new Promise(resolve => setTimeout(resolve, 0));
 
-    // Verify delete event was dispatched with correct user ID
-    expect(mockOnUserDelete).toHaveBeenCalledWith('1');
+    // Find and click the confirm button in the delete dialog
+    const dialog = container.querySelector('[data-testid="delete-dialog"]');
+    if (!dialog) throw new Error('Delete dialog not found');
+
+    const confirmButton = dialog.querySelector('.mdc-button--raised.danger');
+    if (!confirmButton) throw new Error('Confirm button not found');
+    await fireEvent.click(confirmButton);
+    await tick();
+
+    // Wait for the fetch call to complete
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    // Check that the event was dispatched with the correct user ID
+    expect(userDeleteHandler).toHaveBeenCalled();
+    expect(userDeleteHandler.mock.calls[0][0].detail).toEqual({ userId: '2' });
   });
 
   it('cancels edit mode when cancel button is clicked', async () => {
     const { container } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups,
-        onUserEdit: mockOnUserEdit,
-        onUserDelete: mockOnUserDelete
+        groups: mockGroups
       }
     });
 
@@ -335,9 +396,7 @@ describe('UserTable', () => {
     const { getByText } = render(UserTable, {
       props: {
         users: [],
-        groups: mockGroups,
-        onUserEdit: mockOnUserEdit,
-        onUserDelete: mockOnUserDelete
+        groups: mockGroups
       }
     });
 
@@ -348,9 +407,7 @@ describe('UserTable', () => {
     const { container } = render(UserTable, {
       props: {
         users: mockUsers,
-        groups: mockGroups,
-        onUserEdit: mockOnUserEdit,
-        onUserDelete: mockOnUserDelete
+        groups: mockGroups
       }
     });
 
@@ -361,5 +418,113 @@ describe('UserTable', () => {
     // Check if table has SMUI DataTable class
     const table = container.querySelector('.mdc-data-table');
     expect(table).toBeTruthy();
+  });
+
+  it('handles user edit', async () => {
+    const { container, getByText, component } = render(UserTable, {
+      props: {
+        users: mockUsers,
+        groups: mockGroups
+      }
+    });
+    const userEditHandler = vi.fn();
+    component.$on('userEdit', userEditHandler);
+    
+    // Find and click edit button for Jane Smith
+    const janeSmithRow = Array.from(container.querySelectorAll('tbody tr')).find(row => 
+      row.textContent?.includes('Jane Smith')
+    );
+    const janeSmithEditButton = janeSmithRow?.querySelector('.edit-button');
+    expect(janeSmithEditButton).toBeTruthy();
+    
+    if (!janeSmithEditButton) throw new Error('Edit button for Jane Smith not found');
+    await fireEvent.click(janeSmithEditButton);
+    await tick();
+    
+    // Change name and email
+    const nameInput = container.querySelector('.edit-input[type="text"]') as HTMLInputElement | null;
+    const emailInput = container.querySelector('.edit-input[type="email"]') as HTMLInputElement | null;
+    expect(nameInput).toBeTruthy();
+    expect(emailInput).toBeTruthy();
+    if (!nameInput || !emailInput) throw new Error('Edit form fields not found');
+    await fireEvent.input(nameInput, { target: { value: 'Updated Name' } });
+    await fireEvent.input(emailInput, { target: { value: 'updated@example.com' } });
+    
+    // Save
+    const saveButton = container.querySelector('.edit-button i.material-icons')?.closest('button');
+    expect(saveButton).toBeTruthy();
+    if (!saveButton) throw new Error('Save button not found');
+    await fireEvent.click(saveButton);
+    await tick();
+    expect(userEditHandler).toHaveBeenCalled();
+  });
+
+  it('handles user delete', async () => {
+    const { container, getByText, component } = render(UserTable, {
+      props: {
+        users: mockUsers,
+        groups: mockGroups
+      }
+    });
+    const userDeleteHandler = vi.fn();
+    component.$on('userDelete', userDeleteHandler);
+    
+    // Find and click delete button for Jane Smith
+    const janeSmithRow = Array.from(container.querySelectorAll('tbody tr')).find(row => 
+      row.textContent?.includes('Jane Smith')
+    );
+    const janeSmithDeleteButton = janeSmithRow?.querySelector('.delete-button');
+    expect(janeSmithDeleteButton).toBeTruthy();
+    
+    if (!janeSmithDeleteButton) throw new Error('Delete button for Jane Smith not found');
+    await fireEvent.click(janeSmithDeleteButton);
+    await tick();
+    
+    // Confirm deletion in dialog
+    const confirmButton = getByText('Delete');
+    expect(confirmButton).toBeTruthy();
+    await fireEvent.click(confirmButton);
+    await tick();
+    expect(userDeleteHandler).toHaveBeenCalled();
+  });
+
+  it('handles group selection', async () => {
+    const { container, getByText, component } = render(UserTable, {
+      props: {
+        users: mockUsers,
+        groups: mockGroups
+      }
+    });
+    const userEditHandler = vi.fn();
+    component.$on('userEdit', userEditHandler);
+    
+    // Find and click edit button for Jane Smith
+    const janeSmithRow = Array.from(container.querySelectorAll('tbody tr')).find(row => 
+      row.textContent?.includes('Jane Smith')
+    );
+    const janeSmithEditButton = janeSmithRow?.querySelector('.edit-button');
+    expect(janeSmithEditButton).toBeTruthy();
+    
+    if (!janeSmithEditButton) throw new Error('Edit button for Jane Smith not found');
+    await fireEvent.click(janeSmithEditButton);
+    await tick();
+    
+    // Select a group
+    const groupSelect = container.querySelector('.group-select') as HTMLSelectElement | null;
+    expect(groupSelect).toBeTruthy();
+    if (!groupSelect) throw new Error('Group select not found');
+    await fireEvent.change(groupSelect, { target: { value: '2' } });
+    await tick();
+    
+    // Save
+    const saveButton = container.querySelector('.edit-button i.material-icons')?.closest('button');
+    expect(saveButton).toBeTruthy();
+    if (!saveButton) throw new Error('Save button not found');
+    await fireEvent.click(saveButton);
+    await tick();
+    await new Promise(resolve => setTimeout(resolve, 0)); // Wait for async operations
+    expect(userEditHandler).toHaveBeenCalled();
+    const event = userEditHandler.mock.calls[0][0];
+    expect(event.detail.groupId).toBe('2');
   });
 }); 

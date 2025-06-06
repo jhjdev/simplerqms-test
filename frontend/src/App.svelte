@@ -3,6 +3,7 @@
   import EnhancedGroupTreeView from "./components/EnhancedGroupTreeView.svelte";
   import CreateEntityForm from "./components/CreateEntityForm.svelte";
   import GroupMembershipPanel from "./components/GroupMembershipPanel.svelte";
+  import HealthCheck from "./components/HealthCheck.svelte";
   import Button from '@smui/button';
   import { onMount } from 'svelte';
   import type { User, Group } from './types';
@@ -14,7 +15,8 @@
   let isLoading = false;
   let errorMessage = '';
   let successMessage = '';
-  let currentPage = window.location.pathname === '/about' ? 'about' : (window.location.pathname === '/faq' ? 'faq' : 'home');
+  let currentPage = window.location.pathname === '/faq' ? 'faq' : 
+                   (window.location.pathname === '/health-status' ? 'health-status' : 'home');
   
   // Dialog state
   let showSuccessDialog = false;
@@ -45,7 +47,7 @@
     }
   }
   
-  async function getAllMembers(groupId: string) {
+  async function getAllMembers(groupId: string): Promise<{ users: User[]; groups: Group[] }> {
     try {
       const response = await fetch(`${API_URL}/groups/${groupId}/all-members`);
       
@@ -53,7 +55,10 @@
         throw new Error(`Failed to get all members: ${response.statusText}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      const typedUsers: User[] = data.users.map((u: any) => ({ ...u, type: 'user' as const }));
+      const typedGroups: Group[] = data.groups.map((g: any) => ({ ...g, type: 'group' as const }));
+      return { users: typedUsers, groups: typedGroups };
     } catch (error) {
       console.error('Error getting all members:', error);
       return { users: [], groups: [] };
@@ -63,17 +68,17 @@
   function navigate(page: string) {
     currentPage = page;
     let path = '/';
-    if (page === 'about') path = '/about';
     if (page === 'faq') path = '/faq';
+    if (page === 'health-status') path = '/health-status';
     window.history.pushState({}, '', path);
   }
 
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && window !== null) {
     window.addEventListener('popstate', () => {
-      if (window.location.pathname === '/about') {
-        currentPage = 'about';
-      } else if (window.location.pathname === '/faq') {
+      if (window.location.pathname === '/faq') {
         currentPage = 'faq';
+      } else if (window.location.pathname === '/health-status') {
+        currentPage = 'health-status';
       } else {
         currentPage = 'home';
       }
@@ -153,14 +158,14 @@
     }
   }
 
-  async function handleUserSubmit(name: string, email: string, groupId: string | null) {
+  async function handleUserSubmit(name: string, email: string, groupId: string | null): Promise<void> {
     isLoading = true;
     errorMessage = "";
     successMessage = "";
 
     try {
       // Make sure we're sending all required fields including type
-      const userData = { name, email, type: 'user', groupId: groupId || null };
+      const userData = { name, email, type: 'user' as const, groupId: groupId || null };
       console.log('Submitting user data:', userData);
       
       const response = await fetch('/api/users', {
@@ -278,6 +283,25 @@
   // Fetch data when the component mounts
   fetchUsers();
   fetchGroups();
+
+  function flattenGroups(groups: Group[]): Group[] {
+    return groups.reduce((acc: Group[], group) => {
+      acc.push(group);
+      if (group.children && group.children.length > 0) {
+        acc.push(...flattenGroups(group.children));
+      }
+      return acc;
+    }, []);
+  }
+
+  function findGroupById(groups: Group[], id: string): Group | undefined {
+    const flatGroups = flattenGroups(groups);
+    return flatGroups.find(g => g.id === id);
+  }
+
+  function findUserById(users: User[], id: string): User | undefined {
+    return users.find(u => u.id === id);
+  }
 </script>
 
 <div class="app">
@@ -289,49 +313,21 @@
   </header>
 
   <nav>
-    <ul>
-      <li>
-        <a 
-          href="/" 
-          class:active={currentPage === 'home'}
-          on:click|preventDefault={() => navigate('home')}
-        >
-          HOME
-        </a>
-      </li>
-      <li>
-        <a 
-          href="/about" 
-          class:active={currentPage === 'about'}
-          on:click|preventDefault={() => navigate('about')}
-        >
-          ABOUT
-        </a>
-      </li>
-      <li>
-        <a 
-          href="/faq" 
-          class:active={currentPage === 'faq'}
-          on:click|preventDefault={() => navigate('faq')}
-        >
-          FAQ
-        </a>
-      </li>
-      <li>
-        <a 
-          href="http://localhost:3000/api-docs" 
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          API DOCS
-        </a>
-      </li>
-    </ul>
+    <div class="nav-content">
+      <div class="nav-left">
+        <ul>
+          <li><a href="/" class:active={currentPage === 'home'} on:click|preventDefault={() => navigate('home')}>Home</a></li>
+          <li><a href="/faq" class:active={currentPage === 'faq'} on:click|preventDefault={() => navigate('faq')}>FAQ</a></li>
+          <li><a href="/health-status" class:active={currentPage === 'health-status'} on:click|preventDefault={() => navigate('health-status')}>System Health</a></li>
+          <li><a href="/api-docs" target="_blank" rel="noopener">API Docs</a></li>
+        </ul>
+      </div>
+    </div>
   </nav>
 
   <main>
     {#if currentPage === 'home'}
-      <div class="main-content" on:click={() => {}} on:keydown={() => {}}>
+      <div class="main-content">
         <CreateEntityForm
           {groups}
           {isLoading}
@@ -350,31 +346,30 @@
         />
 
         <UserTable
-          {users}
-          {groups}
+          users={users}
+          groups={groups}
+          on:userEdit={handleUserEdit}
+          on:userDelete={handleUserDelete}
         />
         
-        <GroupMembershipPanel
-          {users}
-          {groups}
-        />
+        <GroupMembershipPanel groups={flattenGroups(groups)} users={users} />
       </div>
-    {:else if currentPage === 'about'}
-      <div class="about-content">
-        <h2>SimplerQMS User and Group Management System</h2>
+    {:else if currentPage === 'faq'}
+      <div class="faq-content">
+        <h2>Frequently Asked Questions</h2>
         
-        <div class="about-section">
-          <h2>About This Project</h2>
+        <div class="faq-section">
+          <h3>About SimplerQMS</h3>
           <p>This project was originally a technical test for SimplerQMS that I have since expanded upon. I decided to use it as a learning tool to expand my skill set and create a showcase of various technologies and best practices in modern web development. Through this project, I've implemented testing frameworks, API documentation, UI enhancements, and CI/CD workflows to demonstrate a comprehensive approach to full-stack development.</p>
         </div>
-        
-        <div class="about-section">
-          <h2>Overview</h2>
+
+        <div class="faq-section">
+          <h3>Overview</h3>
           <p>This application provides a comprehensive system for managing users, groups, and their hierarchical relationships. It includes both a RESTful API and a modern web interface for managing these entities.</p>
         </div>
-        
-        <div class="about-section">
-          <h2>Features</h2>
+
+        <div class="faq-section">
+          <h3>Features</h3>
           <ul>
             <li>Create, list, update, and delete users</li>
             <li>Create, list, update, and delete groups</li>
@@ -385,9 +380,9 @@
             <li>Modern web interface for all operations</li>
           </ul>
         </div>
-        
-        <div class="about-section">
-          <h2>Technology Stack</h2>
+
+        <div class="faq-section">
+          <h3>Technology Stack</h3>
           <ul>
             <li><strong>Backend</strong>: Node.js with Express.js</li>
             <li><strong>Database</strong>: PostgreSQL</li>
@@ -395,44 +390,7 @@
             <li><strong>Containerization</strong>: Docker and Docker Compose</li>
           </ul>
         </div>
-        
-        <div class="about-section">
-          <h2>Bonus Features Implemented</h2>
-          
-          <h3>Testing</h3>
-          <ul>
-            <li>Unit Tests: Backend API endpoint tests using Jest and Supertest</li>
-            <li>Frontend Tests: Component tests using Vitest and Testing Library</li>
-            <li>Test Configuration: Separate TypeScript configuration for tests</li>
-          </ul>
-          
-          <h3>Documentation</h3>
-          <ul>
-            <li>API Documentation: Swagger/OpenAPI documentation for all endpoints</li>
-            <li>User Guide: Comprehensive README with setup and usage instructions</li>
-            <li>Code Documentation: JSDoc comments for better code understanding</li>
-          </ul>
-          
-          <h3>UI Enhancements</h3>
-          <ul>
-            <li>Enhanced TreeView: Improved group hierarchy visualization with search functionality</li>
-            <li>Member Count Display: Visual indicators of group size and hierarchy depth</li>
-            <li>Expand/Collapse: Better navigation of complex hierarchies</li>
-            <li>Accessibility Improvements: ARIA roles and keyboard navigation support</li>
-          </ul>
-          
-          <h3>CI/CD</h3>
-          <ul>
-            <li>GitHub Actions: Automated testing and build pipeline</li>
-            <li>Linting: Code quality checks integrated into CI pipeline</li>
-            <li>Artifact Generation: Build artifacts for deployment</li>
-          </ul>
-        </div>
-      </div>
-    {:else}
-      <div class="faq-content">
-        <h2>Frequently Asked Questions</h2>
-        
+
         <div class="faq-section">
           <h3>How to Access the Application</h3>
           <p>Here are the main access points for the SimplerQMS application:</p>
@@ -462,15 +420,40 @@
         </div>
         
         <div class="faq-section">
-          <h3>What features have been implemented?</h3>
+          <h3>Bonus Features Implemented</h3>
+          
+          <h4>Testing</h4>
           <ul>
-            <li><strong>Testing</strong>: Simple but effective tests for both frontend and backend</li>
-            <li><strong>Documentation</strong>: Comprehensive API documentation and user guides</li>
-            <li><strong>UI Enhancements</strong>: Improved group hierarchy visualization with search</li>
-            <li><strong>CI/CD</strong>: GitHub Actions workflow for automated testing and deployment</li>
+            <li>Unit Tests: Backend API endpoint tests using Jest and Supertest</li>
+            <li>Frontend Tests: Component tests using Vitest and Testing Library</li>
+            <li>Test Configuration: Separate TypeScript configuration for tests</li>
+          </ul>
+          
+          <h4>Documentation</h4>
+          <ul>
+            <li>API Documentation: Swagger/OpenAPI documentation for all endpoints</li>
+            <li>User Guide: Comprehensive README with setup and usage instructions</li>
+            <li>Code Documentation: JSDoc comments for better code understanding</li>
+          </ul>
+          
+          <h4>UI Enhancements</h4>
+          <ul>
+            <li>Enhanced TreeView: Improved group hierarchy visualization with search functionality</li>
+            <li>Member Count Display: Visual indicators of group size and hierarchy depth</li>
+            <li>Expand/Collapse: Better navigation of complex hierarchies</li>
+            <li>Accessibility Improvements: ARIA roles and keyboard navigation support</li>
+          </ul>
+          
+          <h4>CI/CD</h4>
+          <ul>
+            <li>GitHub Actions: Automated testing and build pipeline</li>
+            <li>Linting: Code quality checks integrated into CI pipeline</li>
+            <li>Artifact Generation: Build artifacts for deployment</li>
           </ul>
         </div>
       </div>
+    {:else if currentPage === 'health-status'}
+      <HealthCheck />
     {/if}
   </main>
 </div>

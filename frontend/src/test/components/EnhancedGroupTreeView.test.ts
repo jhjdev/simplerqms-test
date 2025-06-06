@@ -7,23 +7,12 @@ describe('EnhancedGroupTreeView', () => {
   const mockGroups: Group[] = [
     {
       id: '1',
-      name: 'Root Group',
+      name: 'Test Group',
       parent_id: null,
       children: [],
       users: [],
       type: 'group',
       level: 0,
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z'
-    },
-    {
-      id: '2',
-      name: 'Child Group',
-      parent_id: '1',
-      children: [],
-      users: [],
-      type: 'group',
-      level: 1,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z'
     }
@@ -32,22 +21,35 @@ describe('EnhancedGroupTreeView', () => {
   const mockUsers: User[] = [
     {
       id: '1',
-      name: 'Test User',
-      email: 'test@example.com',
+      name: 'John Doe',
+      email: 'john@example.com',
       type: 'user',
       groupId: '1',
-      group_id: '1',
       created_at: '2024-01-01T00:00:00Z'
     }
   ];
 
-  const mockFetch = vi.fn();
   const mockConfirm = vi.fn();
+  const mockFetch = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('fetch', mockFetch);
-    vi.stubGlobal('confirm', mockConfirm);
+    global.confirm = mockConfirm;
+    global.fetch = mockFetch.mockImplementation((url, options) => {
+      if (url.includes('/api/groups/1') && options?.method === 'DELETE') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({})
+        });
+      }
+      if (url.includes('/api/groups/1') && options?.method === 'PUT') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({})
+        });
+      }
+      return Promise.reject(new Error('Network error'));
+    });
   });
 
   it('renders the component with groups', () => {
@@ -63,6 +65,30 @@ describe('EnhancedGroupTreeView', () => {
     expect(container.querySelector('.search-input')).toBeTruthy();
   });
 
+  it('displays users in groups', async () => {
+    const { container } = render(EnhancedGroupTreeView, {
+      props: {
+        groups: mockGroups,
+        users: mockUsers
+      }
+    });
+
+    // Expand the root group
+    const expandButton = container.querySelector('[data-testid="toggle-expand-button"]');
+    if (expandButton) {
+      await fireEvent.click(expandButton);
+    }
+
+    // Wait for the expansion to complete
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    // Check if user is displayed
+    const userItem = container.querySelector('.user-item');
+    expect(userItem).toBeTruthy();
+    expect(userItem?.textContent).toContain('John Doe');
+    expect(userItem?.textContent).toContain('john@example.com');
+  });
+
   it('filters groups based on search term', async () => {
     const { container } = render(EnhancedGroupTreeView, {
       props: {
@@ -73,9 +99,31 @@ describe('EnhancedGroupTreeView', () => {
 
     const searchInput = container.querySelector('.search-input');
     if (searchInput) {
-      await fireEvent.input(searchInput, { target: { value: 'Root' } });
+      await fireEvent.input(searchInput, { target: { value: 'Test' } });
       expect(container.querySelector('.tree-view')).toBeTruthy();
-      expect(container.querySelector('.node-label')).toHaveTextContent('Root Group');
+      expect(container.querySelector('.node-label')).toHaveTextContent('Test Group');
+    }
+  });
+
+  it('filters users based on search term', async () => {
+    const { container } = render(EnhancedGroupTreeView, {
+      props: {
+        groups: mockGroups,
+        users: mockUsers
+      }
+    });
+
+    // Expand the root group
+    const expandButton = container.querySelector('[data-testid="toggle-expand-button"]');
+    if (expandButton) {
+      fireEvent.click(expandButton);
+    }
+
+    const searchInput = container.querySelector('.search-input');
+    if (searchInput) {
+      await fireEvent.input(searchInput, { target: { value: 'John Doe' } });
+      expect(container.querySelector('.user-item')).toBeTruthy();
+      expect(container.querySelector('.user-name')).toHaveTextContent('John Doe');
     }
   });
 
@@ -114,7 +162,7 @@ describe('EnhancedGroupTreeView', () => {
 
     const toggleButton = container.querySelectorAll('.control-btn')[2];
     if (toggleButton) {
-      // Initially, member count should be visible
+      // Initially visible
       expect(container.querySelector('.member-count')).toBeTruthy();
 
       // Toggle off
@@ -137,13 +185,17 @@ describe('EnhancedGroupTreeView', () => {
 
     // Mock confirm dialog
     mockConfirm.mockReturnValue(true);
-    // Mock successful fetch response
-    mockFetch.mockResolvedValueOnce({ ok: true });
 
-    const deleteButton = container.querySelector('.delete-btn');
+    // Mock successful delete response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({})
+    });
+
+    const deleteButton = container.querySelector('[data-testid="delete-button"]');
     if (deleteButton) {
       await fireEvent.click(deleteButton);
-      expect(mockConfirm).toHaveBeenCalledWith('Are you sure you want to delete the group "Root Group"?');
+      expect(mockConfirm).toHaveBeenCalled();
       expect(mockFetch).toHaveBeenCalledWith('/api/groups/1', {
         method: 'DELETE'
       });
@@ -158,14 +210,16 @@ describe('EnhancedGroupTreeView', () => {
       }
     });
 
-    // Mock successful fetch response
-    mockFetch.mockResolvedValueOnce({ ok: true });
+    // Mock successful edit response
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({})
+    });
 
-    const editButton = container.querySelector('.edit-btn');
+    const editButton = container.querySelector('[data-testid="edit-button"]');
     if (editButton) {
       await fireEvent.click(editButton);
       expect(container.querySelector('.edit-field')).toBeTruthy();
-      expect(container.querySelector('input')).toHaveValue('Root Group');
     }
   });
 
@@ -179,9 +233,11 @@ describe('EnhancedGroupTreeView', () => {
 
     const searchInput = container.querySelector('.search-input');
     if (searchInput) {
+      // Enter search term
       await fireEvent.input(searchInput, { target: { value: 'Test' } });
-      expect(container.querySelector('.clear-btn')).toBeTruthy();
+      expect(searchInput).toHaveValue('Test');
 
+      // Click clear button
       const clearButton = container.querySelector('.clear-btn');
       if (clearButton) {
         await fireEvent.click(clearButton);

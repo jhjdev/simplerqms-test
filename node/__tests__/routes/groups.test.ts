@@ -1,75 +1,66 @@
 import request from 'supertest';
-import { app } from '../../app';
+import app from '../../app.js';
+import { mockDb } from '../mocks/db.js';
 
-// Get the mock function that will be returned by the mock
-const mockSql = jest.fn();
-
-// Mock the database module
-jest.mock('../../utils/db', () => {
-  return mockSql;
+beforeEach(() => {
+  mockDb.reset();
 });
 
 describe('Groups API', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+  describe('GET /api/groups/hierarchy', () => {
+    it('should return groups in hierarchical structure', async () => {
+      // Create parent group
+      const parentGroup = await mockDb.sql`
+        INSERT INTO groups (name, parent_id, level)
+        VALUES ('Parent Group', NULL, 0)
+        RETURNING *
+      `;
 
-  describe('GET /api/groups', () => {
-    it('should return all groups', async () => {
-      // Mock the SQL response
-      mockSql.mockResolvedValueOnce([
-        { id: 1, name: 'Group 1', parent_id: null },
-        { id: 2, name: 'Group 2', parent_id: 1 },
-      ]);
-
-      const response = await request(app).get('/api/groups');
-
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(2);
-      expect(response.body[0].name).toBe('Group 1');
-      expect(response.body[1].name).toBe('Group 2');
-    });
-  });
-
-  describe('POST /api/groups/:id/check-membership', () => {
-    it('should check if a member is in a group hierarchy', async () => {
-      const groupId = 1;
-      const memberId = 2;
-      const memberType = 'user';
-
-      // Mock the SQL response for the check-membership query
-      mockSql.mockResolvedValueOnce([
-        { is_member: true }
-      ]);
+      // Create child group
+      const childGroup = await mockDb.sql`
+        INSERT INTO groups (name, parent_id, level)
+        VALUES ('Child Group', ${parentGroup[0].id}, 1)
+        RETURNING *
+      `;
 
       const response = await request(app)
-        .post(`/api/groups/${groupId}/check-membership`)
-        .send({ memberId, memberType })
-        .set('Accept', 'application/json');
+        .get('/api/groups/hierarchy')
+        .expect(200);
 
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual({ isMember: true });
+      expect(response.body).toHaveLength(1); // Only root groups
+      expect(response.body[0]).toMatchObject({
+        id: parentGroup[0].id,
+        name: 'Parent Group',
+        children: expect.arrayContaining([
+          expect.objectContaining({
+            id: childGroup[0].id,
+            name: 'Child Group',
+          }),
+        ]),
+      });
     });
   });
 
-  describe('GET /api/groups/:id/all-members', () => {
-    it('should return all members in a group hierarchy', async () => {
-      const groupId = 1;
+  describe('POST /api/groups', () => {
+    it('should create a new group', async () => {
+      const response = await request(app)
+        .post('/api/groups')
+        .send({ name: 'New Group', parent_id: null })
+        .expect(201);
 
-      // Mock the SQL response for the all-members query
-      mockSql.mockResolvedValueOnce([
-        { id: 2, name: 'User 1', type: 'user' },
-        { id: 3, name: 'Group 2', type: 'group' },
-      ]);
+      expect(response.body).toMatchObject({
+        name: 'New Group',
+        parent_id: null,
+      });
+    });
 
-      const response = await request(app).get(
-        `/api/groups/${groupId}/all-members`
-      );
+    it('should return 400 for invalid input', async () => {
+      const response = await request(app)
+        .post('/api/groups')
+        .send({ parent_id: null }) // Missing name
+        .expect(400);
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(2);
-      expect(response.body[0].type).toBe('user');
-      expect(response.body[1].type).toBe('group');
+      expect(response.body).toHaveProperty('error');
     });
   });
 });

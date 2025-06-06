@@ -5,7 +5,8 @@
  */
 
 import app from '../app.js';
-import * as http from 'http';
+import https from 'https';
+import fs from 'fs';
 
 /**
  * Get port from environment and store in Express.
@@ -15,16 +16,32 @@ const port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
- * Create HTTP server.
+ * Create HTTPS server.
  */
 
-const server = http.createServer(app);
+const httpsOptions = {
+  key: fs.readFileSync('/app/ssl/key.pem'),
+  cert: fs.readFileSync('/app/ssl/cert.pem'),
+  requestCert: false,
+  rejectUnauthorized: false,
+};
+const server = https.createServer(httpsOptions, app);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port, '0.0.0.0');
+if (typeof port === 'string' && isNaN(Number(port))) {
+  // Named pipe
+  server.listen(port, () => {
+    console.log(`Server listening on pipe ${port}`);
+  });
+} else {
+  // Port number
+  server.listen(Number(port), '0.0.0.0', () => {
+    console.log(`Server listening on port ${port}`);
+  });
+}
 server.on('error', onError);
 server.on('listening', onListening);
 
@@ -57,9 +74,7 @@ function onError(error: NodeJS.ErrnoException): void {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
@@ -81,10 +96,7 @@ function onError(error: NodeJS.ErrnoException): void {
  */
 
 function onListening(): void {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr?.port;
+  const addr = server.address();
+  const bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr?.port;
   console.log('Listening on ' + bind);
 }
-

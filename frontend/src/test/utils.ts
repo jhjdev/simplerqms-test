@@ -14,9 +14,21 @@ export async function setTextFieldValue(element: HTMLElement, value: string) {
  * Helper function to handle SMUI Select changes
  */
 export async function setSelectValue(element: HTMLElement, value: string) {
-  const select = element.querySelector('select');
-  if (!select) throw new Error('No select element found');
-  await fireEvent.change(select, { target: { value } });
+  // Find and click the select anchor to open the menu
+  const anchor = element.querySelector('.mdc-select__anchor');
+  if (!anchor) throw new Error('No select anchor found');
+  await fireEvent.click(anchor);
+  
+  // Wait for the menu to be fully opened
+  await new Promise(resolve => setTimeout(resolve, 0));
+  
+  // Find and click the option with the matching value
+  const option = element.querySelector(`.mdc-deprecated-list-item[data-value="${value}"]`);
+  if (!option) throw new Error('No option found with value: ' + value);
+  await fireEvent.click(option);
+  
+  // Wait for the selection to be processed
+  await new Promise(resolve => setTimeout(resolve, 0));
 }
 
 /**

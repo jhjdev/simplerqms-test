@@ -30,15 +30,24 @@
 
   // Function to count all members (users and groups) within a group hierarchy
   function countAllMembers(groupId: string): number {
-    const directUsers = users.filter(u => u.group_id === groupId).length;
-    const directGroups = groups.filter(g => g.parent_id === groupId);
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return 0;
+
+    let totalMembers = 0;
     
-    let totalMembers = directUsers;
+    // Count direct users
+    if (group.users) {
+      totalMembers += group.users.length;
+    }
     
-    // Recursively count members in child groups
-    for (const childGroup of directGroups) {
-      totalMembers += 1; // Count the group itself
-      totalMembers += countAllMembers(childGroup.id);
+    // Count child groups and their members
+    if (group.children) {
+      for (const child of group.children) {
+        // Count the child group itself
+        totalMembers += 1;
+        // Count all members in the child group
+        totalMembers += countAllMembers(child.id);
+      }
     }
     
     return totalMembers;
@@ -49,27 +58,23 @@
     if (searchTerm.trim() === '') {
       // Only show root groups (groups without parent_id)
       filteredGroups = groups.filter(g => !g.parent_id);
-      console.log('Root groups:', filteredGroups.map(g => ({ id: g.id, name: g.name, parent_id: g.parent_id })));
     } else {
       const term = searchTerm.toLowerCase();
       // Filter groups that match the search term
       filteredGroups = groups.filter(group => {
-        // Only include root groups in the main view
-        if (group.parent_id) return false;
-        
         // Check if the group name matches
         if (group.name.toLowerCase().includes(term)) return true;
         
-        // Check if any child group matches
-        const childGroups = groups.filter(g => g.parent_id === group.id);
-        if (childGroups.some(g => g.name.toLowerCase().includes(term))) return true;
-        
         // Check if any user in the group matches
-        const groupUsers = users.filter(u => u.group_id === group.id);
-        return groupUsers.some(u => 
+        if (group.users && group.users.some(u => 
           u.name.toLowerCase().includes(term) || 
           u.email.toLowerCase().includes(term)
-        );
+        )) return true;
+        
+        // Check if any child group matches
+        if (group.children && group.children.some(g => g.name.toLowerCase().includes(term))) return true;
+        
+        return false;
       });
     }
   }
@@ -95,11 +100,10 @@
 
   function handleCancel(): void {
     editingGroupId = null;
-    editingGroupName = '';  // Reset the name when canceling
+    editingGroupName = '';
   }
 
   function handleUserEdit(event: CustomEvent<{ userId: string; name: string; email: string; groupId: string | null }>) {
-    // Forward the user edit event to the parent component
     dispatch('userEdit', event.detail);
   }
 
@@ -192,7 +196,6 @@
 
   function toggleMemberCount() {
     showMemberCount = !showMemberCount;
-    console.log('Member count visibility:', showMemberCount); // Debug log
   }
 
   function expandAll() {
@@ -261,16 +264,12 @@
           on:userEdit={handleUserEdit}
         />
       {/each}
-    {:else if searchTerm.trim() !== ''}
-      <p class="no-results">No groups match your search</p>
     {:else}
-      <p class="no-results">No groups found</p>
+      <div class="no-results">No groups found</div>
     {/if}
   </div>
-  
-  {#if isLoading}
-    <div class="loading-overlay" transition:fade={{ duration: 150 }}>
-      <div class="spinner"></div>
-    </div>
-  {/if}
 </div>
+
+<style>
+  /* Styles moved to EnhancedGroupTreeView.css */
+</style>

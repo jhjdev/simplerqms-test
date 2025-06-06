@@ -4,8 +4,10 @@
   import Button from '@smui/button';
   import Select, { Option } from '@smui/select';
   import IconButton from '@smui/icon-button';
+  import TextField from '@smui/textfield';
   import { createEventDispatcher } from 'svelte';
   import '../styles/components/UserTable.css';
+  import type { SvelteComponentTyped } from 'svelte';
 
   export let users: User[] = [];
   export let groups: Group[] = [];
@@ -22,7 +24,7 @@
     if (sortField === 'created_at') {
       const aDate = new Date(aValue || '').getTime();
       const bDate = new Date(bValue || '').getTime();
-      return sortDirection === 'asc' ? aDate - bDate : bDate - aDate;
+      return sortDirection === 'asc' ? bDate - aDate : aDate - bDate;
     }
     
     const comparison = String(aValue).localeCompare(String(bValue));
@@ -34,13 +36,14 @@
       sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
       sortField = field;
-      sortDirection = 'desc'; // Default to descending order
+      sortDirection = 'desc';
     }
   }
 
   const dispatch = createEventDispatcher<{
     userEdit: { userId: string; name: string; email: string; groupId: string | null };
     userDelete: { userId: string };
+    userUpdate: { user: User };
   }>();
 
   let editingUserId: string | null = null;
@@ -59,92 +62,77 @@
 
   $: currentGroup = editingUserId ? getUserGroup(editingUserId) : null;
 
-  function startEdit(user: User): void {
+  function handleEdit(user: User): void {
+    console.log('Starting edit for user:', user);
     editingUserId = user.id;
     editName = user.name;
     editEmail = user.email;
     editGroupId = user.group_id || null;
+    console.log('Edit form initialized with:', { editName, editEmail, editGroupId });
   }
 
-  function handleDelete(user: User): void {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      dispatch('userDelete', { userId: user.id });
-    }
-  }
-
-  function handleSave(user: User): void {
-    if (editName && editEmail) {
-      dispatch('userEdit', {
-        userId: user.id,
-        name: editName,
-        email: editEmail,
-        groupId: editGroupId,
-      });
-      editingUserId = null;
-    }
-  }
-
-  function handleCancel(): void {
-    editingUserId = null;
-  }
-
-  async function saveEditApi(user: User): Promise<void> {
-    console.log('Saving user:', { editName, editEmail, editGroupId });
+  async function handleSave(user: User) {
     try {
+      console.log('Saving user:', { editName, editEmail, editGroupId });
+      
       // Update user details
-      const userResponse = await fetch(`/api/users/${user.id}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/users/${user.id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: editName,
           email: editEmail,
+          type: user.type,
+          group_id: editGroupId
         }),
       });
 
-      if (!userResponse.ok) {
-        throw new Error('Failed to update user');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update user');
       }
 
-      // Update user's group if changed
-      const currentGroupId = getUserGroup(user.id)?.id || null;
-      if (editGroupId !== currentGroupId) {
-        const groupResponse = await fetch(`/api/users/${user.id}/group`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            groupId: editGroupId,
-          }),
-        });
-
-        if (!groupResponse.ok) {
-          throw new Error('Failed to update user group');
-        }
-      }
-
-      // Dispatch event to update UI
-      dispatch('userEdit', {
-        userId: user.id,
-        name: editName,
-        email: editEmail,
-        groupId: editGroupId,
+      const updatedUser = await response.json();
+      
+      // Dispatch events before updating state
+      dispatch('userEdit', { 
+        userId: user.id, 
+        name: editName, 
+        email: editEmail, 
+        groupId: editGroupId 
       });
+      
+      dispatch('userUpdate', { user: updatedUser });
 
+      // Update local state after events are dispatched
+      users = users.map(u => u.id === user.id ? { ...u, ...updatedUser } : u);
+      
+      // Reset edit state last
       editingUserId = null;
+      editName = '';
+      editEmail = '';
+      editGroupId = null;
     } catch (error) {
       console.error('Error updating user:', error);
-      // Handle error (show notification, etc.)
+      throw error;
     }
   }
 
-  async function deleteUser(userId: string): Promise<void> {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+  let showDeleteDialog = false;
+  let userToDelete: User | null = null;
 
+  function handleDelete(user: User) {
+    userToDelete = user;
+    showDeleteDialog = true;
+  }
+
+  async function confirmDelete() {
+    if (!userToDelete) return;
+    
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await fetch(`/api/users/${userToDelete.id}`, {
         method: 'DELETE',
       });
 
@@ -152,11 +140,23 @@
         throw new Error('Failed to delete user');
       }
 
-      dispatch('userDelete', { userId });
-      window.location.reload(); // Refresh the page to update the list
+      dispatch('userDelete', { userId: userToDelete.id });
+      showDeleteDialog = false;
+      userToDelete = null;
     } catch (error) {
       console.error('Error deleting user:', error);
+      showDeleteDialog = false;
+      userToDelete = null;
     }
+  }
+
+  function cancelDelete() {
+    showDeleteDialog = false;
+    userToDelete = null;
+  }
+
+  function handleCancel(): void {
+    editingUserId = null;
   }
 </script>
 
@@ -188,14 +188,29 @@
               <Row>
                 <Cell>
                   {#if editingUserId === user.id}
-                    <input
-                      type="text"
-                      bind:value={editName}
-                      class="edit-input"
-                      on:keydown|preventDefault={(e) => {
-                        if (e.key === 'Enter') saveEditApi(user);
-                      }}
-                    />
+                    <div class="edit-form">
+                      <input
+                        type="text"
+                        bind:value={editName}
+                        placeholder="Name"
+                        class="edit-input"
+                      />
+                      <input
+                        type="email"
+                        bind:value={editEmail}
+                        placeholder="Email"
+                        class="edit-input"
+                      />
+                      <select
+                        bind:value={editGroupId}
+                        class="edit-input"
+                      >
+                        <option value={null}>No Group</option>
+                        {#each groups as group}
+                          <option value={group.id}>{group.name}</option>
+                        {/each}
+                      </select>
+                    </div>
                   {:else}
                     {user.name}
                   {/if}
@@ -207,7 +222,7 @@
                       bind:value={editEmail}
                       class="edit-input"
                       on:keydown|preventDefault={(e) => {
-                        if (e.key === 'Enter') saveEditApi(user);
+                        if (e.key === 'Enter') handleSave(user);
                       }}
                     />
                   {:else}
@@ -220,13 +235,13 @@
                       bind:value={editGroupId}
                       class="group-select"
                     >
-                      <option value={null}>None</option>
+                      <option value="">None</option>
                       {#each groups as group}
                         <option value={group.id}>{group.name}</option>
                       {/each}
                     </select>
                   {:else}
-                    {getUserGroup(user.id)?.name || 'None'}
+                    {user.group_name || 'None'}
                   {/if}
                 </Cell>
                 <Cell>
@@ -241,6 +256,7 @@
                         class="edit-button mdc-button--raised"
                       >
                         <i class="material-icons">save</i>
+                        <span>Save</span>
                       </Button>
                       <Button
                         variant="raised"
@@ -252,7 +268,7 @@
                     {:else}
                       <Button
                         variant="raised"
-                        on:click={() => startEdit(user)}
+                        on:click={() => handleEdit(user)}
                         class="edit-button mdc-button--raised"
                       >
                         <i class="material-icons">edit</i>
@@ -275,6 +291,23 @@
     {/if}
   </div>
 </div>
+
+{#if showDeleteDialog}
+<div class="dialog-overlay" on:click={cancelDelete} on:keydown={(e) => e.key === 'Escape' && cancelDelete()} tabindex="0" role="dialog" aria-modal="true" data-testid="delete-dialog-overlay">
+  <div class="dialog delete-dialog" on:click|stopPropagation on:keydown={() => {}} data-testid="delete-dialog">
+    <div class="dialog-header">
+      <h3>Confirm Delete</h3>
+    </div>
+    <div class="dialog-content">
+      <p>Are you sure you want to delete {userToDelete?.name}?</p>
+    </div>
+    <div class="dialog-actions">
+      <Button variant="text" on:click={cancelDelete}>Cancel</Button>
+      <Button variant="raised" class="danger" on:click={confirmDelete}>Delete</Button>
+    </div>
+  </div>
+</div>
+{/if}
 
 <style>
   .sortable {

@@ -23,4 +23,7 @@ export interface Group {
   created_at: string;
   updated_at: string;
   paddingLeft?: string;
-};
+  totalCount?: number;
+  userCount?: number;
+  groupCount?: number;
+}

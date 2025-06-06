@@ -8,34 +8,36 @@ describe('TreeNode', () => {
     id: '1',
     name: 'Test Group',
     parent_id: null,
-    children: [],
-    users: [],
+    children: [
+      {
+        id: '2',
+        name: 'Child Group',
+        parent_id: '1',
+        children: [],
+        users: [],
+        type: 'group',
+        level: 1,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+        totalCount: 0
+      }
+    ],
+    users: [
+      {
+        id: '1',
+        name: 'Test User',
+        email: 'test@example.com',
+        type: 'user',
+        groupId: '1',
+        group_id: '1',
+        created_at: '2024-01-01T00:00:00Z'
+      }
+    ],
     type: 'group',
     level: 0,
     created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z'
-  };
-
-  const mockChildGroup: Group = {
-    id: '2',
-    name: 'Child Group',
-    parent_id: '1',
-    children: [],
-    users: [],
-    type: 'group',
-    level: 1,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z'
-  };
-
-  const mockUser: User = {
-    id: '1',
-    name: 'Test User',
-    email: 'test@example.com',
-    type: 'user',
-    groupId: '1',
-    group_id: '1',
-    created_at: '2024-01-01T00:00:00Z'
+    updated_at: '2024-01-01T00:00:00Z',
+    totalCount: 1
   };
 
   const mockHandleEdit = vi.fn();
@@ -63,8 +65,8 @@ describe('TreeNode', () => {
         toggleExpand: mockToggleExpand,
         showMemberCount: true,
         countAllMembers: mockCountAllMembers,
-        groups: [mockGroup, mockChildGroup],
-        users: [mockUser]
+        groups: [mockGroup],
+        users: mockGroup.users
       }
     });
 
@@ -87,8 +89,8 @@ describe('TreeNode', () => {
         toggleExpand: mockToggleExpand,
         showMemberCount: true,
         countAllMembers: mockCountAllMembers,
-        groups: [mockGroup, mockChildGroup],
-        users: [mockUser]
+        groups: [mockGroup],
+        users: mockGroup.users
       }
     });
 
@@ -110,18 +112,13 @@ describe('TreeNode', () => {
         toggleExpand: mockToggleExpand,
         showMemberCount: true,
         countAllMembers: mockCountAllMembers,
-        groups: [mockGroup, mockChildGroup],
-        users: [mockUser]
+        groups: [mockGroup],
+        users: mockGroup.users
       }
     });
 
-    // Find the edit button by test id
     const editButton = getByTestId('edit-button');
-    
-    // Simulate click event
     await fireEvent.click(editButton);
-    
-    // Verify the handler was called with the correct group
     expect(mockHandleEdit).toHaveBeenCalledWith(mockGroup);
   });
 
@@ -139,18 +136,13 @@ describe('TreeNode', () => {
         toggleExpand: mockToggleExpand,
         showMemberCount: true,
         countAllMembers: mockCountAllMembers,
-        groups: [mockGroup, mockChildGroup],
-        users: [mockUser]
+        groups: [mockGroup],
+        users: mockGroup.users
       }
     });
 
-    // Find the delete button by test id
     const deleteButton = getByTestId('delete-button');
-    
-    // Simulate click event
     await fireEvent.click(deleteButton);
-    
-    // Verify the handler was called with the correct group
     expect(mockHandleDelete).toHaveBeenCalledWith(mockGroup);
   });
 
@@ -168,18 +160,13 @@ describe('TreeNode', () => {
         toggleExpand: mockToggleExpand,
         showMemberCount: true,
         countAllMembers: mockCountAllMembers,
-        groups: [mockGroup, mockChildGroup],
-        users: [mockUser]
+        groups: [mockGroup],
+        users: mockGroup.users
       }
     });
 
-    // Find the toggle expand button by test id
     const expandButton = getByTestId('toggle-expand-button');
-    
-    // Simulate click event
     await fireEvent.click(expandButton);
-    
-    // Verify the handler was called with the correct group id
     expect(mockToggleExpand).toHaveBeenCalledWith(mockGroup.id);
   });
 
@@ -197,23 +184,19 @@ describe('TreeNode', () => {
         toggleExpand: mockToggleExpand,
         showMemberCount: true,
         countAllMembers: mockCountAllMembers,
-        groups: [mockGroup, mockChildGroup],
-        users: [mockUser]
+        groups: [mockGroup],
+        users: mockGroup.users
       }
     });
 
-    // Check that the children container exists
     expect(container.querySelector('.tree-node-children')).toBeTruthy();
-    
-    // When using SMUI mocks in tests, DOM structure is different, 
-    // so verify child group is rendered through its text content
-    expect(getByText('expand_more')).toBeTruthy(); // The expand icon is 'expand_more' when expanded
+    expect(getByText('expand_more')).toBeTruthy();
   });
 
   it('renders users in the group', () => {
     const { container, getByText } = render(TreeNode, {
       props: {
-        group: { ...mockGroup, users: [mockUser] },
+        group: mockGroup,
         editingGroupId: null,
         editingGroupName: '',
         handleEdit: mockHandleEdit,
@@ -224,15 +207,13 @@ describe('TreeNode', () => {
         toggleExpand: mockToggleExpand,
         showMemberCount: true,
         countAllMembers: mockCountAllMembers,
-        groups: [mockGroup, mockChildGroup],
-        users: [mockUser]
+        groups: [mockGroup],
+        users: mockGroup.users
       }
     });
 
     expect(container.querySelector('.tree-node-children')).toBeTruthy();
-    // Verify the user is rendered by checking for their name
-    expect(getByText('Test User (User)')).toBeTruthy();
-    // Not in editing mode
-    expect(container.querySelector('.tree-node.editing')).toBeFalsy();
+    expect(getByText('Test User')).toBeTruthy();
+    expect(getByText('(test@example.com)')).toBeTruthy();
   });
 }); 
