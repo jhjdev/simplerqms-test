@@ -11,15 +11,14 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     https: {
-      key: fs.readFileSync(path.resolve(__dirname, '../ssl/localhost-key.pem')),
-      cert: fs.readFileSync(path.resolve(__dirname, '../ssl/localhost.pem')),
+      key: fs.readFileSync('/app/ssl/localhost-key.pem'),
+      cert: fs.readFileSync('/app/ssl/localhost.pem'),
     },
     proxy: {
       '/api': {
         target: 'https://node:3000',
         changeOrigin: true,
         secure: process.env.NODE_ENV === 'production',
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
       '/health': {
         target: 'https://node:3000',

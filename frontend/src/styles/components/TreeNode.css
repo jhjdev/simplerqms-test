@@ -180,13 +180,29 @@
   }
 }
 
+.user-items-container {
+  position: relative;
+  padding-left: 0.5rem;
+}
+
 .user-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  margin-left: 2rem;
+  margin-left: 0;
   color: var(--color-text);
+  position: relative;
+}
+
+.user-item::before {
+  content: '';
+  position: absolute;
+  left: -0.5rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #e0e0e0;
 }
 
 .user-item .material-icons {

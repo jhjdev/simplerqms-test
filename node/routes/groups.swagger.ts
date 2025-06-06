@@ -59,50 +59,6 @@
 
 /**
  * @swagger
- * /groups/hierarchy:
- *   get:
- *     summary: Get group hierarchy
- *     tags: [Groups]
- *     responses:
- *       200:
- *         description: Group hierarchy
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   name:
- *                     type: string
- *                   parent_id:
- *                     type: integer
- *                     nullable: true
- *                   level:
- *                     type: integer
- *                   users:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: integer
- *                         name:
- *                           type: string
- *                         type:
- *                           type: string
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
-
-/**
- * @swagger
  * /groups/{id}:
  *   get:
  *     summary: Get a group by ID

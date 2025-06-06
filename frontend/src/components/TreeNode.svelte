@@ -38,6 +38,14 @@
   // Remove the local isExpanded state and use expandedGroups directly
   $: isExpanded = expandedGroups.has(group.id);
 
+  // Add a computed property to get users in this group
+  $: groupUsers = users.filter(user => user.groupId === group.id);
+  
+  // Combine group.users with users that have this group as their groupId
+  $: allGroupUsers = [...(group.users || []), ...groupUsers].filter((user, index, self) => 
+    index === self.findIndex(u => u.id === user.id)
+  );
+
   function toggleNodeExpand() {
     toggleExpand(group.id);
   }
@@ -163,14 +171,16 @@
         on:userEdit={handleUserEdit}
       />
     {/each}
-    {#if group.users && group.users.length > 0}
-      {#each group.users as user (user.id)}
-        <div class="user-item" transition:slide={{ duration: 150, delay: 0 }}>
-          <span class="material-icons">person</span>
-          <span class="user-name">{user.name}</span>
-          <span class="user-email">({user.email})</span>
-        </div>
-      {/each}
+    {#if allGroupUsers.length > 0}
+      <div class="user-items-container">
+        {#each allGroupUsers as user (user.id)}
+          <div class="user-item" transition:slide={{ duration: 150, delay: 0 }}>
+            <span class="material-icons">person</span>
+            <span class="user-name">{user.name}</span>
+            <span class="user-email">({user.email})</span>
+          </div>
+        {/each}
+      </div>
     {/if}
   </div>
 {/if}

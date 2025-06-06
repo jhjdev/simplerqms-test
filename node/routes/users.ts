@@ -1,4 +1,5 @@
 import { Router, Request, Response, RequestHandler } from 'express';
+import { Row } from 'postgres';
 import sql from '../utils/sql.js';
 
 const router = Router();
@@ -42,19 +43,7 @@ router.get('/', (async (_req: Request, res: Response) => {
       ORDER BY u.id
     `;
 
-    // Format the response to include group information
-    const formattedUsers = users.map((user) => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      type: user.type,
-      created_at: user.created_at,
-      updated_at: user.updated_at,
-      group_id: user.group_id,
-      group_name: user.group_name,
-    }));
-
-    res.json(formattedUsers);
+    res.json(users);
   } catch (error) {
     console.error('Error getting users:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -121,11 +110,10 @@ router.patch('/:id', (async (req: Request<UserParams>, res: Response) => {
     if (name || email) {
       await sql`
         UPDATE users
-        SET ${sql({
-          name: name || undefined,
-          email: email || undefined,
-          updated_at: new Date(),
-        })}
+        SET 
+          name = COALESCE(${name}, name),
+          email = COALESCE(${email}, email),
+          updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
       `;
     }
@@ -195,7 +183,7 @@ router.delete('/:id', (async (req: Request<UserParams>, res: Response) => {
       DELETE FROM users WHERE id = ${id}
     `;
 
-    res.status(204).send();
+    res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Internal server error' });

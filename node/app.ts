@@ -35,8 +35,6 @@ setupSwagger(app);
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/groups', groupRouter);
-app.use('/api/groups', groupMemberRouter);
-app.use('/api/groups', groupHierarchyRouter);
 
 // catch 404 and forward to error handler
 app.use(function (

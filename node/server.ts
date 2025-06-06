@@ -5,7 +5,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import pool from './utils/sql.js';
+import sql from './utils/sql.js';
+import { setupSwagger } from './swagger-setup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -18,7 +19,7 @@ app.use(
     origin:
       process.env.NODE_ENV === 'production'
         ? ['https://your-production-domain.com']
-        : ['https://localhost:5173'],
+        : ['https://localhost:5173', 'https://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -26,6 +27,9 @@ app.use(
 );
 
 app.use(express.json());
+
+// Setup Swagger
+setupSwagger(app);
 
 interface HealthCheck {
   status: 'ok' | 'degraded' | 'error';
@@ -55,7 +59,7 @@ interface HealthCheck {
 app.get('/health', async (_req: Request, res: Response) => {
   try {
     // Test database connection
-    await pool.query('SELECT 1');
+    await sql`SELECT 1`;
     res.json({
       status: 'ok',
       services: {
@@ -107,4 +111,7 @@ const server = https.createServer(httpsOptions, app);
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server is running on https://localhost:${PORT}`);
+  console.log(
+    `Swagger documentation available at https://localhost:${PORT}/api-docs`
+  );
 });

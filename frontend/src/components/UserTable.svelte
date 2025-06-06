@@ -53,6 +53,23 @@
 
   $: console.log('State changed:', { editingUserId, editName, editEmail, editGroupId });
 
+  // Function to flatten group hierarchy for select options
+  function flattenGroups(groups: Group[], level = 0): { id: string; name: string; level: number }[] {
+    let result: { id: string; name: string; level: number }[] = [];
+    
+    for (const group of groups) {
+      result.push({ id: group.id, name: '  '.repeat(level) + group.name, level });
+      if (group.children && group.children.length > 0) {
+        result = result.concat(flattenGroups(group.children, level + 1));
+      }
+    }
+    
+    return result;
+  }
+
+  // Get flattened groups for select options
+  $: flattenedGroups = flattenGroups(groups);
+
   // Get user's current group
   function getUserGroup(userId: string): Group | null {
     const user = users.find(u => u.id === userId);
@@ -206,7 +223,7 @@
                         class="edit-input"
                       >
                         <option value={null}>No Group</option>
-                        {#each groups as group}
+                        {#each flattenedGroups as group}
                           <option value={group.id}>{group.name}</option>
                         {/each}
                       </select>
@@ -236,7 +253,7 @@
                       class="group-select"
                     >
                       <option value="">None</option>
-                      {#each groups as group}
+                      {#each flattenedGroups as group}
                         <option value={group.id}>{group.name}</option>
                       {/each}
                     </select>

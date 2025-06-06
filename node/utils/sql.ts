@@ -1,4 +1,4 @@
-import { Pool, PoolConfig, QueryResult } from 'pg';
+import postgres from 'postgres';
 
 interface DatabaseConfig {
   host: string;
@@ -35,15 +35,26 @@ if (!process.env.DATABASE_PASSWORD) {
   );
 }
 
-const pool = new Pool(getDatabaseConfig());
+const config = getDatabaseConfig();
 
-// Test the connection
-pool.query('SELECT NOW()', (err: Error | null, res: QueryResult) => {
-  if (err) {
-    console.error('Error connecting to the database:', err);
-  } else {
-    console.log('Successfully connected to the database');
-  }
+// Create postgres connection with template literal support
+const sql = postgres({
+  host: config.host,
+  port: config.port,
+  username: config.user,
+  password: config.password,
+  database: config.database,
+  ssl: config.ssl,
 });
 
-export default pool;
+// Test the connection
+(async () => {
+  try {
+    await sql`SELECT NOW()`;
+    console.log('Successfully connected to the database');
+  } catch (err) {
+    console.error('Error connecting to the database:', err);
+  }
+})();
+
+export default sql;

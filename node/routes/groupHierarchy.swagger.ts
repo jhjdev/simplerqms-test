@@ -9,17 +9,50 @@
  * @swagger
  * /groups/hierarchy:
  *   get:
- *     summary: Get the complete group hierarchy
+ *     summary: Get the complete group hierarchy with users
  *     tags: [Group Hierarchy]
  *     responses:
  *       200:
- *         description: The complete group hierarchy
+ *         description: The complete group hierarchy with users
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Group'
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: Group ID
+ *                   name:
+ *                     type: string
+ *                     description: Group name
+ *                   parent_id:
+ *                     type: integer
+ *                     nullable: true
+ *                     description: Parent group ID
+ *                   level:
+ *                     type: integer
+ *                     description: Group's level in the hierarchy (0 for root)
+ *                   users:
+ *                     type: array
+ *                     description: Users directly assigned to this group
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           description: User ID
+ *                         name:
+ *                           type: string
+ *                           description: User name
+ *                         email:
+ *                           type: string
+ *                           description: User email
+ *                         type:
+ *                           type: string
+ *                           enum: ['admin', 'regular']
+ *                           description: User type
  *       500:
  *         description: Server error
  *         content:

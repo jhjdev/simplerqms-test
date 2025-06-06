@@ -1,5 +1,5 @@
 import { Router, Request, Response, RequestHandler } from 'express';
-import sql from '../utils/db.js';
+import sql from '../utils/sql.js';
 
 const router = Router();
 
@@ -138,13 +138,14 @@ router.delete('/:id/members/:memberId', (async (
       return res.status(404).json({ error: 'Member not found in group' });
     }
 
-    await sql`
+    const result = await sql`
       DELETE FROM group_members
       WHERE group_id = ${id}
       AND member_id = ${memberId}
+      RETURNING *
     `;
 
-    res.status(204).send();
+    res.status(200).json({ message: 'Member removed successfully', deleted: result[0] });
   } catch (error) {
     console.error('Error removing group member:', error);
     res.status(500).json({ error: 'Internal server error' });

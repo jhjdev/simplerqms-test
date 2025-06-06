@@ -1,7 +1,7 @@
 import * as express from 'express';
 const router = express.Router();
 
-import sql from '../utils/db.js';
+import sql from '../utils/sql.js';
 
 // Get all members within a group hierarchy
 router.get('/:groupId/members', async function (req, res, next) {

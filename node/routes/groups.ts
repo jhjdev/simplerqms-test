@@ -7,6 +7,7 @@ import {
   RequestHandler,
 } from 'express';
 import { Row } from 'postgres';
+import type { Sql } from 'postgres';
 const router: Router = express.Router();
 
 import sql from '../utils/sql.js';
@@ -26,6 +27,27 @@ interface GroupHierarchy extends Group {
 
 interface GroupParams {
   id: string;
+}
+
+interface GroupMember {
+  id: number;
+  name: string;
+  email?: string;
+  type: 'user' | 'group';
+}
+
+interface GroupWithCounts {
+  id: number;
+  name: string;
+  parent_id: number | null;
+  level: number;
+  user_count: string;
+  group_count: string;
+  users: GroupMember[];
+  children: GroupWithCounts[];
+  userCount: number;
+  groupCount: number;
+  totalCount: number;
 }
 
 // Get all groups
@@ -65,7 +87,7 @@ router.post('/', (async (req: Request, res: Response) => {
     }
 
     // Start a transaction
-    const result = await sql.begin(async (sql) => {
+    const result = await sql.begin(async (sql: Sql) => {
       // Create the new group
       const [newGroup] = await sql`
         INSERT INTO groups (name, parent_id, level)
@@ -124,8 +146,8 @@ router.patch('/:id', (async (req: Request<GroupParams>, res: Response) => {
     const [updatedGroup] = await sql`
       UPDATE groups
       SET 
-        name = CASE WHEN ${name} IS NOT NULL THEN ${name} ELSE name END,
-        parent_id = CASE WHEN ${parent_id} IS NOT NULL THEN ${parent_id} ELSE parent_id END
+        name = COALESCE(${name}, name),
+        parent_id = COALESCE(${parent_id}, parent_id)
       WHERE id = ${id}
       RETURNING id, name, parent_id
     `;
@@ -136,6 +158,141 @@ router.patch('/:id', (async (req: Request<GroupParams>, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 }) as RequestHandler<GroupParams>);
+
+// Get all members of a group (from groupMembers.ts)
+router.get('/:id/members', (async (
+  req: Request<GroupParams>,
+  res: Response
+) => {
+  const { id } = req.params;
+
+  try {
+    // Check if group exists
+    const [group] = await sql`
+      SELECT id FROM groups WHERE id = ${id}
+    `;
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    const members = await sql`
+      SELECT 
+        gm.id,
+        gm.group_id,
+        gm.member_id,
+        gm.member_type,
+        CASE 
+          WHEN gm.member_type = 'user' THEN u.name
+          WHEN gm.member_type = 'group' THEN g.name
+        END as name
+      FROM group_members gm
+      LEFT JOIN users u ON gm.member_type = 'user' AND gm.member_id = u.id
+      LEFT JOIN groups g ON gm.member_type = 'group' AND gm.member_id = g.id
+      WHERE gm.group_id = ${id}
+      ORDER BY gm.member_type DESC, gm.member_id
+    `;
+
+    res.json(members);
+  } catch (error) {
+    console.error('Error getting group members:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}) as RequestHandler<GroupParams>);
+
+// Add a member to a group (from groupMembers.ts)
+router.post('/:id/members', (async (
+  req: Request<GroupParams>,
+  res: Response
+) => {
+  const { id } = req.params;
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+
+  try {
+    // Check if group exists
+    const [group] = await sql`
+      SELECT id FROM groups WHERE id = ${id}
+    `;
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    // Check if user exists
+    const [user] = await sql`
+      SELECT id FROM users WHERE id = ${userId}
+    `;
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is already in the group
+    const [existingMember] = await sql`
+      SELECT id FROM group_members
+      WHERE group_id = ${id}
+      AND member_id = ${userId}
+      AND member_type = 'user'
+    `;
+    if (existingMember) {
+      return res.status(400).json({ error: 'User is already in the group' });
+    }
+
+    const [newMember] = await sql`
+      INSERT INTO group_members (group_id, member_id, member_type)
+      VALUES (${id}, ${userId}, 'user')
+      RETURNING id, group_id, member_id, member_type
+    `;
+
+    res.status(201).json(newMember);
+  } catch (error) {
+    console.error('Error adding group member:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}) as RequestHandler<GroupParams>);
+
+// Remove a member from a group (from groupMembers.ts)
+router.delete('/:id/members/:memberId', (async (
+  req: Request<GroupParams & { memberId: string }>,
+  res: Response
+) => {
+  const { id, memberId } = req.params;
+
+  try {
+    // Check if group exists
+    const [group] = await sql`
+      SELECT id FROM groups WHERE id = ${id}
+    `;
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    // Check if member exists in the group
+    const [member] = await sql`
+      SELECT id FROM group_members
+      WHERE group_id = ${id}
+      AND member_id = ${memberId}
+    `;
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found in group' });
+    }
+
+    const result = await sql`
+      DELETE FROM group_members
+      WHERE group_id = ${id}
+      AND member_id = ${memberId}
+      RETURNING *
+    `;
+
+    res
+      .status(200)
+      .json({ message: 'Member removed successfully', deleted: result[0] });
+  } catch (error) {
+    console.error('Error removing group member:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}) as RequestHandler<GroupParams & { memberId: string }>);
 
 // Delete a group
 router.delete('/:id', (async (req: Request<GroupParams>, res: Response) => {
@@ -172,14 +329,17 @@ router.get('/hierarchy', (async (_req: Request, res: Response) => {
           g.name,
           g.parent_id,
           g.level,
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id', u.id,
-              'name', u.name,
-              'email', u.email,
-              'type', 'user'
-            )
-          ) FILTER (WHERE u.id IS NOT NULL) as users,
+          COALESCE(
+            json_agg(
+              jsonb_build_object(
+                'id', u.id,
+                'name', u.name,
+                'email', u.email,
+                'type', 'user'
+              )
+            ) FILTER (WHERE u.id IS NOT NULL),
+            '[]'::json
+          ) as users,
           COUNT(DISTINCT CASE WHEN gm.member_type = 'user' THEN gm.member_id END) as user_count,
           COUNT(DISTINCT CASE WHEN gm.member_type = 'group' THEN gm.member_id END) as group_count
         FROM groups g
@@ -324,7 +484,7 @@ router.get('/:id/all-members', (async (
 
     // Format the response to match what the frontend expects
     const formattedResponse = {
-      users: members
+      users: (members as unknown as GroupMember[])
         .filter((m) => m.type === 'user')
         .map((u) => ({
           id: u.id,
@@ -332,7 +492,9 @@ router.get('/:id/all-members', (async (
           email: u.email,
           type: u.type,
         })),
-      groups: members.filter((m) => m.type === 'group'),
+      groups: (members as unknown as GroupMember[]).filter(
+        (m) => m.type === 'group'
+      ),
     };
 
     res.json(formattedResponse);
@@ -367,8 +529,8 @@ router.get('/all', (async (_req: Request, res: Response) => {
     `;
 
     // Format the response to include the full path for each group
-    const formattedGroups = groups.map((group) => {
-      const parent = groups.find((g) => g.id === group.parent_id);
+    const formattedGroups = groups.map((group: Row) => {
+      const parent = groups.find((g: Row) => g.id === group.parent_id);
       const name = group.parent_id
         ? `${parent?.name} > ${group.name} (ID: ${group.id})`
         : `${group.name} (ID: ${group.id})`;

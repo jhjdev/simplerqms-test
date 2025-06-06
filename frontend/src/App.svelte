@@ -148,7 +148,20 @@
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
-      groups = await response.json();
+      const groupData = await response.json();
+      
+      // Ensure each group has a users array
+      function processGroup(group: Group) {
+        if (!group.users) {
+          group.users = [];
+        }
+        if (group.children) {
+          group.children.forEach(processGroup);
+        }
+        return group;
+      }
+      
+      groups = groupData.map(processGroup);
     } catch (error) {
       console.error('Error fetching groups:', error);
       errorMessage = error instanceof Error ? error.message : 'Failed to fetch groups';
