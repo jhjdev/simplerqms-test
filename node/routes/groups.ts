@@ -335,7 +335,8 @@ router.get('/hierarchy', (async (_req: Request, res: Response) => {
                 'id', u.id,
                 'name', u.name,
                 'email', u.email,
-                'type', 'user'
+                'type', 'user',
+                'group_id', g.id
               )
             ) FILTER (WHERE u.id IS NOT NULL),
             '[]'::json

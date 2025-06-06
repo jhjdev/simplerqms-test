@@ -11,25 +11,25 @@
   const dispatch = createEventDispatcher<{
     groupUpdated: void;
     groupDeleted: Group;
-    userEdit: { userId: string; name: string; email: string; groupId: string | null };
+    userEdit: { userId: string | number; name: string; email: string; groupId: string | number | null };
   }>();
 
-  let editingGroupId: string | null = null;
+  let editingGroupId: string | number | null = null;
   let editingGroupName: string = '';
   let searchTerm: string = '';
-  let expandedGroups: Set<string> = new Set();
+  let expandedGroups: Set<string | number> = new Set();
   let filteredGroups: Group[] = [];
   let isLoading: boolean = false;
   let showMemberCount: boolean = true;
 
   // User editing state
-  let editingUserId: string | null = null;
+  let editingUserId: string | number | null = null;
   let editingUserName: string = '';
   let editingUserEmail: string = '';
-  let editingUserGroupId: string | null = null;
+  let editingUserGroupId: string | number | null = null;
 
   // Function to count all members (users and groups) within a group hierarchy
-  function countAllMembers(groupId: string): number {
+  function countAllMembers(groupId: string | number): number {
     const group = groups.find(g => g.id === groupId);
     if (!group) return 0;
 
@@ -103,7 +103,7 @@
     editingGroupName = '';
   }
 
-  function handleUserEdit(event: CustomEvent<{ userId: string; name: string; email: string; groupId: string | null }>) {
+  function handleUserEdit(event: CustomEvent<{ userId: string | number; name: string; email: string; groupId: string | number | null }>) {
     dispatch('userEdit', event.detail);
   }
 
@@ -184,7 +184,7 @@
     }
   }
 
-  function toggleExpand(groupId: string) {
+  function toggleExpand(groupId: string | number) {
     const newExpandedGroups = new Set(expandedGroups);
     if (newExpandedGroups.has(groupId)) {
       newExpandedGroups.delete(groupId);
@@ -199,7 +199,7 @@
   }
 
   function expandAll() {
-    const newExpandedGroups = new Set<string>();
+    const newExpandedGroups = new Set<string | number>();
     groups.forEach(group => {
       newExpandedGroups.add(group.id);
     });
@@ -207,12 +207,12 @@
   }
 
   function collapseAll() {
-    expandedGroups = new Set<string>();
+    expandedGroups = new Set<string | number>();
   }
 
   // Initialize with all root groups expanded
   onMount(() => {
-    const initialExpandedGroups = new Set<string>();
+    const initialExpandedGroups = new Set<string | number>();
     groups
       .filter(g => !g.parent_id)
       .forEach(g => initialExpandedGroups.add(g.id));

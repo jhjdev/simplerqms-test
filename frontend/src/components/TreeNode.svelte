@@ -11,27 +11,27 @@
   import '../styles/components/TreeNode.css';
 
   export let group: Group;
-  export let editingGroupId: string | null;
+  export let editingGroupId: string | number | null;
   export let editingGroupName: string;
   export let handleEdit: (group: Group) => void;
   export let handleSave: (group: Group) => Promise<void>;
   export let handleDelete: (group: Group) => void;
   export let handleCancel: () => void;
-  export let expandedGroups: Set<string>;
-  export let toggleExpand: (groupId: string) => void;
+  export let expandedGroups: Set<string | number>;
+  export let toggleExpand: (groupId: string | number) => void;
   export let showMemberCount: boolean;
-  export let countAllMembers: (groupId: string) => number;
+  export let countAllMembers: (groupId: string | number) => number;
   export let groups: Group[];
   export let users: User[];
 
   // User editing state
-  let editingUserId: string | null = null;
+  let editingUserId: string | number | null = null;
   let editingUserName: string = '';
   let editingUserEmail: string = '';
-  let editingUserGroupId: string | null = null;
+  let editingUserGroupId: string | number | null = null;
   
   const dispatch = createEventDispatcher<{
-    userEdit: { userId: string; name: string; email: string; groupId: string | null };
+    userEdit: { userId: string | number; name: string; email: string; groupId: string | number | null };
     groupUpdated: void;
   }>();
 
@@ -39,9 +39,9 @@
   $: isExpanded = expandedGroups.has(group.id);
 
   // Add a computed property to get users in this group
-  $: groupUsers = users.filter(user => user.groupId === group.id);
+  $: groupUsers = users.filter(user => user.group_id === group.id);
   
-  // Combine group.users with users that have this group as their groupId
+  // Combine group.users with users that have this group as their group_id
   $: allGroupUsers = [...(group.users || []), ...groupUsers].filter((user, index, self) => 
     index === self.findIndex(u => u.id === user.id)
   );
@@ -75,7 +75,7 @@
     editingUserId = null;
   }
   
-  function handleUserEdit(event: CustomEvent<{ userId: string; name: string; email: string; groupId: string | null }>) {
+  function handleUserEdit(event: CustomEvent<{ userId: string | number; name: string; email: string; groupId: string | number | null }>) {
     dispatch('userEdit', event.detail);
   }
   

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import sql from './utils/sql.js';
 import { setupSwagger } from './swagger-setup.js';
+import { initializeDatabase } from './utils/db-init.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -109,6 +110,10 @@ const httpsOptions = {
 const server = https.createServer(httpsOptions, app);
 
 const PORT = process.env.PORT || 3000;
+
+// Initialize database before starting server
+initializeDatabase().catch(console.error);
+
 server.listen(PORT, () => {
   console.log(`Server is running on https://localhost:${PORT}`);
   console.log(

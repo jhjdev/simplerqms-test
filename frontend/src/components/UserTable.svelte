@@ -41,21 +41,21 @@
   }
 
   const dispatch = createEventDispatcher<{
-    userEdit: { userId: string; name: string; email: string; groupId: string | null };
-    userDelete: { userId: string };
+    userEdit: { userId: string | number; name: string; email: string; groupId: string | number | null };
+    userDelete: { userId: string | number };
     userUpdate: { user: User };
   }>();
 
-  let editingUserId: string | null = null;
+  let editingUserId: string | number | null = null;
   let editName = '';
   let editEmail = '';
-  let editGroupId: string | null = null;
+  let editGroupId: string | number | null = null;
 
   $: console.log('State changed:', { editingUserId, editName, editEmail, editGroupId });
 
   // Function to flatten group hierarchy for select options
-  function flattenGroups(groups: Group[], level = 0): { id: string; name: string; level: number }[] {
-    let result: { id: string; name: string; level: number }[] = [];
+  function flattenGroups(groups: Group[], level = 0): { id: string | number; name: string; level: number }[] {
+    let result: { id: string | number; name: string; level: number }[] = [];
     
     for (const group of groups) {
       result.push({ id: group.id, name: '  '.repeat(level) + group.name, level });
@@ -71,7 +71,7 @@
   $: flattenedGroups = flattenGroups(groups);
 
   // Get user's current group
-  function getUserGroup(userId: string): Group | null {
+  function getUserGroup(userId: string | number): Group | null {
     const user = users.find(u => u.id === userId);
     if (!user || !user.group_id) return null;
     return groups.find(g => g.id === user.group_id) || null;

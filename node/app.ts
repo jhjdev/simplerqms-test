@@ -6,6 +6,7 @@ import cors from 'cors';
 import { fileURLToPath } from 'url';
 import createError from 'http-errors';
 import { setupSwagger } from './swagger-setup.js';
+import { initializeDatabase } from './utils/db-init.js';
 
 import indexRouter from './routes/index.js';
 import usersRouter from './routes/users.js';
@@ -20,7 +21,7 @@ const app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -31,6 +32,9 @@ app.use(cors());
 
 // Initialize Swagger documentation
 setupSwagger(app);
+
+// Initialize database and seed test data
+initializeDatabase().catch(console.error);
 
 app.use('/', indexRouter);
 app.use('/api/users', usersRouter);
