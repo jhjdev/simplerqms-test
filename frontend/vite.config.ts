@@ -4,6 +4,11 @@ import fs from 'fs';
 import path from 'path';
 import history from 'connect-history-api-fallback';
 
+// Check if SSL certificates exist (for Docker environment)
+const sslKeyPath = '/app/ssl/localhost-key.pem';
+const sslCertPath = '/app/ssl/localhost.pem';
+const hasSSL = fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath);
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [svelte()],
@@ -12,24 +17,26 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     strictPort: true,
-    https: {
-      key: fs.readFileSync('/app/ssl/localhost-key.pem'),
-      cert: fs.readFileSync('/app/ssl/localhost.pem'),
-    },
+    ...(hasSSL && {
+      https: {
+        key: fs.readFileSync(sslKeyPath),
+        cert: fs.readFileSync(sslCertPath),
+      },
+    }),
     proxy: {
       '/api': {
         target: 'https://node:3000',
         changeOrigin: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false, // Accept self-signed certificates
       },
       '^/health$': {
         target: 'https://node:3000',
         changeOrigin: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false, // Accept self-signed certificates
       },
     },
     hmr: {
-      protocol: 'wss',
+      protocol: hasSSL ? 'wss' : 'ws',
       host: 'localhost',
       port: 5173,
       clientPort: 5173
@@ -42,10 +49,12 @@ export default defineConfig({
   preview: {
     port: 5173,
     strictPort: true,
-    https: {
-      key: fs.readFileSync('/app/ssl/localhost-key.pem'),
-      cert: fs.readFileSync('/app/ssl/localhost.pem'),
-    }
+    ...(hasSSL && {
+      https: {
+        key: fs.readFileSync(sslKeyPath),
+        cert: fs.readFileSync(sslCertPath),
+      },
+    })
   },
   configureServer(server) {
     const historyMiddleware = history({

@@ -35,7 +35,44 @@ This application provides a comprehensive system for managing users, groups, and
 
 - 🟢 **Backend**: Node.js with Express.js and TypeScript
 - 🐘 **Database**: PostgreSQL with comprehensive monitoring
-- ⚡ **Frontend**: Svelte with Material UI components and Vite
+- ⚡ **Frontend**: Svelte 4.2.12 with SMUI 7.0.0 components and Vite
+
+## Frontend Technology Decisions 📌
+
+### Svelte and SMUI Version Pinning
+
+This project uses **exact version pinning** for Svelte and Svelte Material UI (SMUI) components:
+
+- **Svelte**: `4.2.12` (exact version)
+- **SMUI Components**: `7.0.0` (exact version)
+
+#### Why We Pin These Versions
+
+**The Runes Problem**: Svelte 5+ introduced "runes" - a new reactivity system that fundamentally changes how data flows in Svelte applications. While runes offer improved performance and developer experience, the ecosystem hasn't fully caught up:
+
+1. **SMUI Compatibility**: SMUI version 8+ requires Svelte 5+ with runes, but the data handling patterns are significantly different and less mature
+2. **Complex Data Structures**: Our application handles hierarchical data (users in groups, groups in groups) which requires sophisticated parent-child relationships
+3. **SMUI Select Component**: The select component in SMUI 8+ has compatibility issues even with the latest stable Svelte versions
+4. **Docker Environment**: Containerized development environments add complexity when dealing with bleeding-edge version combinations
+5. **Enterprise Stability**: For production-grade applications, stability trumps cutting-edge features
+
+#### What This Means
+
+- ✅ **Stable Development**: No version conflicts or compatibility issues
+- ✅ **Reliable Components**: All SMUI components work as expected
+- ✅ **Predictable Builds**: Docker builds are consistent across environments
+- ✅ **Complex Data Handling**: Hierarchical user/group relationships work seamlessly
+- ❌ **No Runes**: We don't get the benefits of Svelte 5's new reactivity system
+- ❌ **Older API**: Using Svelte 4's older but proven API patterns
+
+#### Migration Path
+
+When the ecosystem matures (likely Q2-Q3 2025), we can migrate to:
+- Svelte 5.x with stable runes support
+- SMUI 8.x with full runes compatibility
+- Updated TypeScript and testing configurations
+
+For now, this setup provides a rock-solid foundation for enterprise development without the headaches of bleeding-edge compatibility issues.
 - 🐳 **Containerization**: Docker and Docker Compose
 - 📊 **Monitoring**: Custom-built enterprise-grade health dashboard
 - 🎨 **Styling**: Modular CSS with Material Design principles

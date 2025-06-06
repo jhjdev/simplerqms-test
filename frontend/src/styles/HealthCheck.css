@@ -144,6 +144,7 @@
   background: rgba(255, 255, 255, 0.1);
   padding: var(--spacing-sm);
   border-radius: var(--border-radius-sm);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -324,7 +325,9 @@
 
 /* Database Stats */
 .db-stats {
-  space-y: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
 .stat-row {
@@ -440,6 +443,7 @@
   background: rgba(255, 255, 255, 0.1);
   padding: var(--spacing-md);
   border-radius: var(--border-radius-sm);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 

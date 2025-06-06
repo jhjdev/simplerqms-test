@@ -37,7 +37,7 @@
     let result: { id: string; name: string; level: number }[] = [];
     
     for (const group of groups) {
-      result.push({ id: group.id, name: '  '.repeat(level) + group.name, level });
+      result.push({ id: String(group.id), name: '  '.repeat(level) + group.name, level });
       if (group.children && group.children.length > 0) {
         result = result.concat(flattenGroups(group.children, level + 1));
       }
