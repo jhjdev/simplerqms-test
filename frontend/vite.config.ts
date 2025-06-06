@@ -11,33 +11,21 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     https: {
-      key: fs.readFileSync('ssl/key.pem'),
-      cert: fs.readFileSync('ssl/cert.pem'),
-      rejectUnauthorized: false
+      key: fs.readFileSync(path.resolve(__dirname, '../ssl/localhost-key.pem')),
+      cert: fs.readFileSync(path.resolve(__dirname, '../ssl/localhost.pem')),
     },
     proxy: {
       '/api': {
         target: 'https://node:3000',
         changeOrigin: true,
-        secure: false,
-        ws: true,
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('proxy error', err);
-          });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
-          });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-          });
-        }
+        secure: process.env.NODE_ENV === 'production',
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      '^/health$': {
+      '/health': {
         target: 'https://node:3000',
         changeOrigin: true,
-        secure: false
-      }
+        secure: process.env.NODE_ENV === 'production',
+      },
     },
     hmr: {
       protocol: 'wss',

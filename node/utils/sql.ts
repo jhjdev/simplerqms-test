@@ -1,30 +1,49 @@
-import postgres from 'postgres';
+import { Pool, PoolConfig, QueryResult } from 'pg';
+
+interface DatabaseConfig {
+  host: string;
+  port: number;
+  user: string;
+  password: string;
+  database: string;
+  ssl?: {
+    rejectUnauthorized: boolean;
+  };
+}
+
+const getDatabaseConfig = (): DatabaseConfig => {
+  const config: DatabaseConfig = {
+    host: process.env.POSTGRES_HOST || 'localhost',
+    port: parseInt(process.env.POSTGRES_PORT || '5432', 10),
+    user: process.env.POSTGRES_USER || 'postgres',
+    password: process.env.DATABASE_PASSWORD || 'postgres',
+    database: process.env.POSTGRES_DB || 'simplerqms',
+  };
+
+  if (process.env.NODE_ENV === 'production') {
+    config.ssl = {
+      rejectUnauthorized: true,
+    };
+  }
+
+  return config;
+};
 
 if (!process.env.DATABASE_PASSWORD) {
   console.warn(
-    'Warning: DATABASE_PASSWORD environment variable is not set. Using empty password.'
+    'Warning: DATABASE_PASSWORD environment variable is not set. Using default password.'
   );
 }
 
-// Default connection settings
-const sql = postgres({
-  host: 'postgres',
-  port: 5432,
-  database: 'simplerqms_test_db',
-  username: 'backend',
-  password: 'PPk4nz5Zd1csikqjqnsc',
-  onnotice: () => {}, // Suppress notices
-  idle_timeout: 20, // Idle connection timeout in seconds
-  connect_timeout: 30, // Connection timeout in seconds
-  max_lifetime: 60 * 60, // Connection max lifetime in seconds
+const pool = new Pool(getDatabaseConfig());
+
+// Test the connection
+pool.query('SELECT NOW()', (err: Error | null, res: QueryResult) => {
+  if (err) {
+    console.error('Error connecting to the database:', err);
+  } else {
+    console.log('Successfully connected to the database');
+  }
 });
 
-// Add connection error handling
-sql
-  .unsafe('SELECT 1')
-  .then(() => console.log('Successfully connected to the database'))
-  .catch((err) =>
-    console.error('Failed to connect to the database:', err.message)
-  );
-
-export default sql;
+export default pool;
