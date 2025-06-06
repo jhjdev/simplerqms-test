@@ -5,24 +5,30 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Group Tree Header Styles */
+.group-list .header {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
   margin-bottom: 1rem;
+  width: 100% !important;
 }
 
-.header h1 {
-  margin: 0;
+.group-list .header h2 {
+  margin: 0 !important;
   font-size: var(--font-size-2xl);
   font-weight: 300;
   color: var(--color-primary);
+  text-align: left !important;
 }
 
-.controls {
-  display: flex;
+.group-list .controls {
+  display: flex !important;
+  flex-direction: row !important;
   gap: 0.5rem;
-  margin-top: -20px;
+  margin: 0 !important;
+  align-items: center !important;
 }
 
 .control-btn {

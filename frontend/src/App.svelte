@@ -128,6 +128,7 @@
 
   onMount(() => {
     fetchUsers();
+    fetchGroups();
   });
 
   async function fetchGroups() {
@@ -419,7 +420,7 @@
             <li>🐳 <strong>Containerization</strong>: Docker and Docker Compose</li>
             <li>📊 <strong>Monitoring</strong>: Custom-built enterprise-grade health dashboard</li>
             <li>🎨 <strong>Styling</strong>: Modular CSS with Material Design principles</li>
-            <li>🔒 <strong>Security</strong>: HTTPS with SSL certificates</li>
+            <li>�� <strong>Security</strong>: HTTPS with SSL certificates</li>
           </ul>
         </div>
 

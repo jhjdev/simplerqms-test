@@ -4,6 +4,7 @@
   import Card from '@smui/card';
   import { fade, fly } from 'svelte/transition';
   import '../styles/HealthCheck.css';
+  import { ANIMATION_CONFIG } from '../config/animations';
 
   interface MemoryInfo {
     rss: string;
@@ -159,7 +160,6 @@
       if (!response.ok) {
         throw new Error(`Health check failed: ${response.statusText}`);
       }
-      
       healthStatus = await response.json();
       lastCheck = new Date();
     } catch (e) {
@@ -171,7 +171,7 @@
 
   function startAutoRefresh() {
     if (autoRefresh) {
-      refreshInterval = setInterval(checkHealth, 30000); // 30 seconds
+      refreshInterval = setInterval(checkHealth, ANIMATION_CONFIG.refreshInterval);
     }
   }
 
@@ -223,9 +223,10 @@
     <div class="actions">
       <Button
         variant="raised"
-        color="primary"
         on:click={checkHealth}
         disabled={loading}
+        class="mdc-button--raised"
+        style="background-color: var(--color-tertiary); color: white;"
       >
         <span class="material-icons">refresh</span>
         {loading ? 'Checking...' : 'Refresh Status'}
@@ -234,6 +235,8 @@
       <Button
         variant="outlined"
         on:click={toggleAutoRefresh}
+        class="mdc-button--outlined"
+        style="color: var(--color-tertiary);"
       >
         <span class="material-icons">
           {autoRefresh ? 'pause' : 'play_arrow'}
@@ -245,6 +248,8 @@
         <Button
           variant="outlined"
           on:click={exportHealthData}
+          class="mdc-button--outlined"
+          style="color: var(--color-tertiary);"
         >
           <span class="material-icons">download</span>
           Export Report
@@ -253,14 +258,14 @@
     </div>
 
     {#if error}
-      <div class="error-message" in:fade={{ duration: 200 }}>
+      <div class="error-message" in:fade={{ duration: ANIMATION_CONFIG.durations.fade }}>
         <span class="material-icons">error</span>
         <p>{error}</p>
       </div>
     {/if}
 
     {#if loading}
-      <div class="loading" in:fade={{ duration: 200 }}>
+      <div class="loading" in:fade={{ duration: ANIMATION_CONFIG.durations.fade }}>
         <div class="spinner"></div>
         <p>Checking system health...</p>
       </div>
@@ -268,7 +273,7 @@
 
     {#if healthStatus}
       <!-- Overall Status Summary -->
-      <div class="overall-status" in:fly={{ y: 20, duration: 300 }}>
+      <div class="overall-status" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.default, delay: ANIMATION_CONFIG.delays.overallStatus }}>
         <Card class="summary-card">
           <div class="summary-content">
             <div class="status-indicator {healthStatus.status}">
@@ -301,27 +306,29 @@
       <div class="status-grid">
         <!-- Frontend Status -->
         <Card class="status-card frontend">
-          <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 0 }}>
+          <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.frontend }}>
             <div class="card-header">
               <span class="material-icons">web</span>
               <h3>Frontend</h3>
             </div>
-            <div class="status-indicator healthy">
-              <span class="material-icons">check_circle</span>
-              <p class="status-text">HEALTHY</p>
+            <div class="status-indicator {healthStatus.status}">
+              <span class="material-icons">
+                {healthStatus.status === 'healthy' ? 'check_circle' : 'error'}
+              </span>
+              <p class="status-text">{healthStatus.status.toUpperCase()}</p>
             </div>
             <div class="service-details">
               <p class="service-name">Svelte Application</p>
               <p class="detail">🎨 UI Framework: Svelte + TypeScript</p>
               <p class="detail">📦 Build Tool: Vite</p>
-              <p class="detail">🌐 Status: Running & Responsive</p>
+              <p class="detail">🌐 Status: {healthStatus.status === 'healthy' ? 'Running & Responsive' : 'Issues Detected'}</p>
             </div>
           </div>
         </Card>
 
         <!-- API Status -->
         <Card class="status-card api">
-          <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 100 }}>
+          <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.api }}>
             <div class="card-header">
               <span class="material-icons">api</span>
               <h3>API Server</h3>
@@ -349,7 +356,7 @@
 
         <!-- Database Status -->
         <Card class="status-card database">
-          <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 200 }}>
+          <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.database }}>
             <div class="card-header">
               <span class="material-icons">storage</span>
               <h3>Database</h3>
@@ -382,7 +389,7 @@
       <div class="metrics-grid">
         <!-- Application Data -->
         <Card class="metric-card">
-          <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 300 }}>
+          <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.applicationData }}>
             <div class="card-header">
               <span class="material-icons">data_usage</span>
               <h3>Application Data</h3>
@@ -407,7 +414,7 @@
         <!-- Performance Metrics -->
         {#if healthStatus.services.api.memory}
           <Card class="metric-card">
-            <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 400 }}>
+            <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.memoryUsage }}>
               <div class="card-header">
                 <span class="material-icons">memory</span>
                 <h3>Memory Usage</h3>
@@ -426,7 +433,7 @@
 
         <!-- Environment Info -->
         <Card class="metric-card">
-          <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 500 }}>
+          <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.environment }}>
             <div class="card-header">
               <span class="material-icons">settings</span>
               <h3>Environment</h3>
@@ -444,7 +451,7 @@
         <!-- Request Statistics -->
         {#if healthStatus.services.api.requests}
           <Card class="metric-card">
-            <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 500 }}>
+            <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.apiTraffic }}>
               <div class="card-header">
                 <span class="material-icons">traffic</span>
                 <h3>API Traffic</h3>
@@ -478,7 +485,7 @@
         <!-- Database Details -->
         {#if healthStatus.services.database.size}
           <Card class="metric-card">
-            <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 600 }}>
+            <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.databaseDetails }}>
               <div class="card-header">
                 <span class="material-icons">storage</span>
                 <h3>Database Details</h3>
@@ -505,7 +512,7 @@
 
         <!-- Recent Activity -->
         <Card class="metric-card">
-          <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 700 }}>
+          <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.recentActivity }}>
             <div class="card-header">
               <span class="material-icons">history</span>
               <h3>Recent Activity</h3>
@@ -555,7 +562,7 @@
         <!-- Docker Information -->
         {#if healthStatus.docker && !healthStatus.docker.status}
           <Card class="metric-card">
-            <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 800 }}>
+            <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.docker }}>
               <div class="card-header">
                 <span class="material-icons">container</span>
                 <h3>Docker Container</h3>
@@ -585,7 +592,7 @@
         <!-- Performance Sparklines -->
         {#if healthStatus.performance && healthStatus.performance.history.length > 0}
           <Card class="metric-card sparkline-card">
-            <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 800 }}>
+            <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.performance }}>
               <div class="card-header">
                 <span class="material-icons">show_chart</span>
                 <h3>Performance Trends</h3>
@@ -669,7 +676,7 @@
 
         <!-- Alert History -->
         <Card class="metric-card alert-card">
-          <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 900 }}>
+          <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.alerts }}>
             <div class="card-header">
               <span class="material-icons">notifications</span>
               <h3>Alert History</h3>
@@ -727,7 +734,7 @@
         <!-- Database Statistics -->
         {#if healthStatus.services.database.statistics}
           <Card class="metric-card">
-            <div class="card-content" in:fly={{ y: 20, duration: 200, delay: 1000 }}>
+            <div class="card-content" in:fly={{ y: 20, duration: ANIMATION_CONFIG.durations.fly.card, delay: ANIMATION_CONFIG.delays.databaseStats }}>
               <div class="card-header">
                 <span class="material-icons">analytics</span>
                 <h3>Database Activity</h3>
