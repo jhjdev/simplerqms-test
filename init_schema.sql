@@ -27,39 +27,36 @@ CREATE TABLE group_members (
 );
 
 -- Create test user
-INSERT INTO users(name, email) VALUES ('Test User', 'test@example.com');
+INSERT INTO users(name, email) VALUES ('Test User', 'test@user.com');
 
 -- Create parent group
-INSERT INTO groups(name, parent_id, level) VALUES ('Europe', NULL, 0);
+INSERT INTO groups(name, parent_id, level) VALUES ('Test Group', NULL, 0);
 
 -- Create child groups
 INSERT INTO groups(name, parent_id, level) 
-SELECT 'Denmark', id, 1 
+SELECT 'Test Users', id, 1 
 FROM groups 
-WHERE name = 'Europe';
+WHERE name = 'Test Group';
 
 INSERT INTO groups(name, parent_id, level) 
-SELECT 'Sweden', id, 1 
+SELECT 'Test Sub Groups', id, 1 
 FROM groups 
-WHERE name = 'Europe';
+WHERE name = 'Test Group';
 
 -- Add child groups to parent group
 INSERT INTO group_members(group_id, member_id, member_type)
 SELECT p.id, c.id, 'group'
 FROM groups p, groups c
-WHERE p.name = 'Europe' AND c.name = 'Denmark';
+WHERE p.name = 'Test Group' AND c.name = 'Test Users';
 
 INSERT INTO group_members(group_id, member_id, member_type)
 SELECT p.id, c.id, 'group'
 FROM groups p, groups c
-WHERE p.name = 'Europe' AND c.name = 'Sweden';
+WHERE p.name = 'Test Group' AND c.name = 'Test Sub Groups';
 
--- Create test user Lars
-INSERT INTO users(name, email) VALUES ('Lars Larsen', 'lars@larsen.dk');
-
--- Add Lars to Denmark group
+-- Add test user to Test Users group
 INSERT INTO group_members(group_id, member_id, member_type)
 SELECT g.id, u.id, 'user'
 FROM groups g, users u
-WHERE g.name = 'Denmark' AND u.email = 'lars@larsen.dk';
+WHERE g.name = 'Test Users' AND u.email = 'test@user.com';
 
