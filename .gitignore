@@ -8,7 +8,8 @@ build/
 
 # Environment variables
 .env
-.env.*
+.env.local
+.env.*.local
 !.env.example
 !.env.test
 
@@ -41,3 +42,15 @@ frontend/package-lock.json
 
 # Vite timestamp files
 vite.config.ts.timestamp-*.mjs
+# Docker
+docker-compose.override.yml
+
+# SSL Certificates and Private Keys
+ssl/*.pem
+ssl/*.key
+ssl/*.crt
+ssl/*.csr
+*.pem
+*.key
+*.crt
+*.csr
