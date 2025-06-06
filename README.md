@@ -293,9 +293,9 @@ Response:
 
 1. Clone the repository
 2. Run `docker compose up --build` to start the application
-3. Access the API at https://localhost:3000
-4. Access the frontend at https://localhost:5173
-5. **NEW**: Access the System Health Dashboard at https://localhost:5173/health-status
+3. Access the frontend at https://localhost:5173
+4. Access the System Health Dashboard at https://localhost:5173/health-status
+5. Access the API at https://localhost:3000
 6. Access the interactive API documentation at https://localhost:3000/api-docs
 
 ### Data Persistence
@@ -333,29 +333,8 @@ To switch back to non-persistent mode:
 
 Note: The initial data (test user and test group) will always be created when the database is initialized, regardless of whether persistence is enabled or not.
 
-## Frontend Features 🎨
 
-### Core Management Features
-- 👥 **User Management**: Create, edit, and delete users
-- 🏢 **Group Management**: Create, edit, and delete groups
-- 🌳 **Group Hierarchy**: Visualize and manage the group hierarchy
-- 🔗 **Membership Management**: Add and remove members from groups
-- 🔍 **Membership Checking**: Check if a user or group is within a specific group hierarchy
-- 📊 **Hierarchy Exploration**: View all members within a group hierarchy
-
-### Enterprise Monitoring Dashboard
-- 📈 **Real-time Sparklines**: Live performance trend visualization with SVG charts
-- 🚨 **Smart Alert System**: Intelligent monitoring with automatic threshold detection
-- 💾 **Memory Monitoring**: Visual memory usage tracking with animated progress bars
-- ⚡ **Performance Metrics**: Response times, CPU usage, and system uptime
-- 🗄️ **Database Analytics**: Connection monitoring, query statistics, and size tracking
-- 📤 **Export Functionality**: Download comprehensive health reports as JSON
-- 🔄 **Auto-refresh**: Configurable live updates every 30 seconds
-- 🎯 **Current System Status**: Real-time status indicators for all services
-- 📝 **Recent Activity**: Track last user creations and group modifications
-- 🌍 **Environment Details**: Complete system environment and version information
-
-## Bonus Features Implemented 🎁
+## Additional Features Implemented 🎁
 
 ### Testing Framework 🧪
 - 🟢 **Unit Tests**: Backend API endpoint tests using Jest and Supertest
@@ -376,15 +355,6 @@ Note: The initial data (test user and test group) will always be created when th
 - ♿ **Accessibility**: ARIA roles and keyboard navigation support
 - 🎯 **Material Design**: Consistent Material UI components throughout
 - 📱 **Responsive Design**: Mobile-first responsive layout
-
-### Enterprise Monitoring Dashboard 📈
-- 📊 **Real-time Sparklines**: Live performance trend visualization
-- 🚨 **Intelligent Alerts**: Smart monitoring with automatic threshold detection
-- 💾 **Memory Monitoring**: Visual memory usage tracking with progress bars
-- ⚡ **Performance Metrics**: Response times, CPU usage, and system uptime
-- 🗄️ **Database Analytics**: Connection monitoring and query statistics
-- 📤 **Export Functionality**: Download comprehensive health reports
-- 🔄 **Auto-refresh**: Configurable live updates every 30 seconds
 
 ### DevOps & CI/CD 🚀
 - 🐙 **GitHub Actions**: Automated testing and build pipeline
@@ -432,16 +402,6 @@ The system automatically monitors:
 - Slow response times (>1000ms)
 - Slow database queries (>500ms)
 
-## Screenshots 📸
-
-### System Health Dashboard
-The enterprise monitoring dashboard provides:
-- Real-time system status overview
-- Performance sparklines showing trends
-- Memory usage visualization
-- Alert history and notifications
-- Database analytics and statistics
-- Export functionality for reports
 
 ## Future Improvements 🔮
 
@@ -455,23 +415,6 @@ The enterprise monitoring dashboard provides:
 - Implement custom alert thresholds
 - Add performance baselines and trend analysis
 
-# Some notes about the base setup
-
-## How to get going
-
-1. Make sure you have `docker` installed on your machine
-2. Open the `docker-compose.yml` file, and uncomment either the `node`, `rails`, or `golang` section, depending on which languge you'd like to do the case in
-3. Run `docker compose up --build`
-
-And that should be it! You should be able to access the api server at `http://localhost:3000` regardless of which language you've chosen and the frontend server at `http://localhost:5173`.
-
-### Live Reloading
-
-`node`, `rails`, & `golang` have been setup with live reloading enabled. This means that your changes to the files should take immediate effect, and you don't need to restart the server to make the changes.
-
-### Frontend
-
-There is a very basic frontend included that can be accessed at `http://localhost:5173`. It currently has a very basic [Svelte](https://svelte.dev/) setup, but do not feel you need to add to it or continue to use Svelte, unless you are inclined to do so.
 
 ## Development Tools
 
@@ -595,17 +538,7 @@ curl https://localhost:3000/api/users
 curl https://localhost:3000/health
 ```
 
-### Additional Resources
-
-#### Live Reloading
-
-The application has been configured with live reloading enabled for development. This means that changes to the source files will automatically be reflected in the running application without needing to restart the server.
-
-#### Accessing the FAQ
-
-The application includes a FAQ page that provides quick access to important links and information about the system. You can access this by clicking on the 'FAQ' link in the navigation bar.
-
-#### Running Tests
+### Running Tests
 
 To run the tests for the application:
 
