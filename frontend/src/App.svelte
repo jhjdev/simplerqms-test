@@ -26,7 +26,7 @@
   const API_URL = '/api'; // Define API_URL constant
 
   // Functions for checking group membership and getting all members
-  async function checkMembership(groupId: string, memberId: string, memberType: 'user' | 'group') {
+  async function checkMembership(groupId: string | number, memberId: string | number, memberType: 'user' | 'group') {
     try {
       const response = await fetch(`${API_URL}/groups/${groupId}/check-membership`, {
         method: 'POST',
@@ -47,7 +47,7 @@
     }
   }
   
-  async function getAllMembers(groupId: string): Promise<{ users: User[]; groups: Group[] }> {
+  async function getAllMembers(groupId: string | number): Promise<{ users: User[]; groups: Group[] }> {
     try {
       const response = await fetch(`${API_URL}/groups/${groupId}/all-members`);
       
@@ -171,7 +171,7 @@
     }
   }
 
-  async function handleUserSubmit(name: string, email: string, groupId: string | null): Promise<void> {
+  async function handleUserSubmit(name: string, email: string, groupId: string | number | null): Promise<void> {
     isLoading = true;
     errorMessage = "";
     successMessage = "";
@@ -207,7 +207,7 @@
     }
   }
 
-  async function handleUserDelete(event: CustomEvent<{ userId: string }>) {
+  async function handleUserDelete(event: CustomEvent<{ userId: string | number }>) {
     const { userId } = event.detail;
     isLoading = true;
     errorMessage = "";
@@ -235,7 +235,7 @@
     }
   }
 
-  async function handleUserEdit(event: CustomEvent<{ userId: string; name: string; email: string; groupId: string | null }>) {
+  async function handleUserEdit(event: CustomEvent<{ userId: string | number; name: string; email: string; groupId: string | number | null }>) {
     console.log('App component received userEdit event:', event.detail);
     const { userId, name, email, groupId } = event.detail;
     console.log('Extracted user edit details:', { userId, name, email, groupId });
@@ -372,96 +372,154 @@
         <h2>Frequently Asked Questions</h2>
         
         <div class="faq-section">
-          <h3>About SimplerQMS</h3>
-          <p>This project was originally a technical test for SimplerQMS that I have since expanded upon. I decided to use it as a learning tool to expand my skill set and create a showcase of various technologies and best practices in modern web development. Through this project, I've implemented testing frameworks, API documentation, UI enhancements, and CI/CD workflows to demonstrate a comprehensive approach to full-stack development.</p>
+          <h3>🚀 About SimplerQMS</h3>
+          <p>This project was originally a technical test for SimplerQMS that I have since expanded upon. I decided to use it as a learning tool to expand my skill set and create a showcase of various technologies and best practices in modern web development. Through this project, I've implemented testing frameworks, API documentation, UI enhancements, CI/CD workflows, and enterprise-grade monitoring to demonstrate a comprehensive approach to full-stack development.</p>
         </div>
 
         <div class="faq-section">
-          <h3>Overview</h3>
-          <p>This application provides a comprehensive system for managing users, groups, and their hierarchical relationships. It includes both a RESTful API and a modern web interface for managing these entities.</p>
+          <h3>📋 Overview</h3>
+          <p>This application provides a comprehensive system for managing users, groups, and their hierarchical relationships. It includes both a RESTful API, a modern web interface, and an enterprise-grade monitoring dashboard for managing these entities with real-time insights into system performance.</p>
         </div>
 
         <div class="faq-section">
-          <h3>Features</h3>
+          <h3>✨ Core Features</h3>
           <ul>
-            <li>Create, list, update, and delete users</li>
-            <li>Create, list, update, and delete groups</li>
-            <li>Add, remove, and list members of a group</li>
-            <li>Check if a member is within a group hierarchy</li>
-            <li>Get all members within a group hierarchy</li>
-            <li>Support for group-to-group relationships (groups can contain other groups)</li>
-            <li>Modern web interface for all operations</li>
+            <li>👥 Create, list, update, and delete users</li>
+            <li>🏢 Create, list, update, and delete groups</li>
+            <li>🔗 Add, remove, and list members of a group</li>
+            <li>🔍 Check if a member is within a group hierarchy</li>
+            <li>📊 Get all members within a group hierarchy</li>
+            <li>🏗️ Support for group-to-group relationships (groups can contain other groups)</li>
+            <li>💻 Modern web interface for all operations</li>
           </ul>
         </div>
 
         <div class="faq-section">
-          <h3>Technology Stack</h3>
+          <h3>🎯 Advanced Monitoring Features</h3>
           <ul>
-            <li><strong>Backend</strong>: Node.js with Express.js</li>
-            <li><strong>Database</strong>: PostgreSQL</li>
-            <li><strong>Frontend</strong>: Svelte with Material UI components</li>
-            <li><strong>Containerization</strong>: Docker and Docker Compose</li>
+            <li>📈 <strong>Real-time Performance Sparklines</strong> - Live charts showing response times, memory usage, and database connections</li>
+            <li>🚨 <strong>Intelligent Alert System</strong> - Automatic monitoring with smart thresholds for system health</li>
+            <li>📊 <strong>Comprehensive System Metrics</strong> - Memory usage, CPU utilization, uptime tracking, and request statistics</li>
+            <li>🗄️ <strong>Database Intelligence</strong> - Connection monitoring, query performance, and operation statistics</li>
+            <li>🔄 <strong>Auto-refresh Dashboard</strong> - Live updates every 30 seconds with manual refresh controls</li>
+            <li>📤 <strong>Health Report Export</strong> - Download comprehensive system reports as JSON</li>
+            <li>🐳 <strong>Docker Container Monitoring</strong> - Container resource usage and health status</li>
+            <li>⚡ <strong>API Traffic Analysis</strong> - Request counts, error rates, and performance metrics</li>
+            <li>📝 <strong>Recent Activity Tracking</strong> - Monitor last user creations and group modifications</li>
+            <li>🌍 <strong>Environment Information</strong> - Complete system environment and version details</li>
           </ul>
         </div>
 
         <div class="faq-section">
-          <h3>How to Access the Application</h3>
+          <h3>🛠️ Technology Stack</h3>
+          <ul>
+            <li>🟢 <strong>Backend</strong>: Node.js with Express.js and TypeScript</li>
+            <li>🐘 <strong>Database</strong>: PostgreSQL with comprehensive monitoring</li>
+            <li>⚡ <strong>Frontend</strong>: Svelte with Material UI components and Vite</li>
+            <li>🐳 <strong>Containerization</strong>: Docker and Docker Compose</li>
+            <li>📊 <strong>Monitoring</strong>: Custom-built enterprise-grade health dashboard</li>
+            <li>🎨 <strong>Styling</strong>: Modular CSS with Material Design principles</li>
+            <li>🔒 <strong>Security</strong>: HTTPS with SSL certificates</li>
+          </ul>
+        </div>
+
+        <div class="faq-section">
+          <h3>🌐 How to Access the Application</h3>
           <p>Here are the main access points for the SimplerQMS application:</p>
           
           <div class="link-section">
-            <h4>Frontend Application</h4>
+            <h4>🎨 Frontend Application</h4>
             <p>This is the main user interface for the SimplerQMS application:</p>
-            <a href="http://localhost:5173" target="_blank" rel="noopener">Open Frontend Application</a>
+            <a href="https://localhost:5173" target="_blank" rel="noopener">🚀 Open Frontend Application</a>
           </div>
           
           <div class="link-section">
-            <h4>API Endpoints</h4>
+            <h4>📊 System Health Dashboard</h4>
+            <p>Enterprise-grade monitoring dashboard with real-time metrics:</p>
+            <a href="https://localhost:5173/health-status" target="_blank" rel="noopener">🔍 View System Health Dashboard</a>
+          </div>
+          
+          <div class="link-section">
+            <h4>🔌 API Endpoints</h4>
             <p>Direct access to the backend API endpoints:</p>
-            <a href="http://localhost:3000/api/groups" target="_blank" rel="noopener">View All Groups</a>
-            <a href="http://localhost:3000/api/groups/hierarchy" target="_blank" rel="noopener">View Group Hierarchy</a>
-            <a href="http://localhost:3000/api/users" target="_blank" rel="noopener">View All Users</a>
+            <a href="https://localhost:3000/api/groups" target="_blank" rel="noopener">👥 View All Groups</a>
+            <a href="https://localhost:3000/api/groups/hierarchy" target="_blank" rel="noopener">🏗️ View Group Hierarchy</a>
+            <a href="https://localhost:3000/api/users" target="_blank" rel="noopener">👤 View All Users</a>
+            <a href="https://localhost:3000/health" target="_blank" rel="noopener">❤️ Health Check API</a>
+          </div>
+          
+          <div class="link-section">
+            <h4>📖 API Documentation</h4>
+            <p>Interactive Swagger API documentation:</p>
+            <a href="https://localhost:3000/api-docs" target="_blank" rel="noopener">📚 View API Documentation</a>
           </div>
         </div>
         
         <div class="faq-section">
-          <h3>How to Run Tests</h3>
-          <p>To run the tests for the application:</p>
+          <h3>🧪 How to Run Tests</h3>
+          <p>To run the comprehensive test suites for the application:</p>
           <ol>
-            <li>For backend tests: <code>docker compose exec node npm test</code></li>
-            <li>For frontend tests: <code>docker compose exec frontend npm test</code></li>
+            <li>🟢 <strong>Backend tests</strong>: <code>docker compose exec node npm test</code></li>
+            <li>⚡ <strong>Frontend tests</strong>: <code>docker compose exec frontend npm test</code></li>
+            <li>📊 <strong>Coverage reports</strong>: <code>docker compose exec frontend npm run test:coverage</code></li>
           </ol>
         </div>
         
         <div class="faq-section">
-          <h3>Bonus Features Implemented</h3>
+          <h3>🎁 Bonus Features Implemented</h3>
           
-          <h4>Testing</h4>
+          <h4>🧪 Testing Framework</h4>
           <ul>
-            <li>Unit Tests: Backend API endpoint tests using Jest and Supertest</li>
-            <li>Frontend Tests: Component tests using Vitest and Testing Library</li>
-            <li>Test Configuration: Separate TypeScript configuration for tests</li>
+            <li>🟢 <strong>Unit Tests</strong>: Backend API endpoint tests using Jest and Supertest</li>
+            <li>⚡ <strong>Frontend Tests</strong>: Component tests using Vitest and Testing Library</li>
+            <li>⚙️ <strong>Test Configuration</strong>: Separate TypeScript configuration for tests</li>
+            <li>📊 <strong>Coverage Reports</strong>: Comprehensive test coverage tracking</li>
           </ul>
           
-          <h4>Documentation</h4>
+          <h4>📚 Documentation</h4>
           <ul>
-            <li>API Documentation: Swagger/OpenAPI documentation for all endpoints</li>
-            <li>User Guide: Comprehensive README with setup and usage instructions</li>
-            <li>Code Documentation: JSDoc comments for better code understanding</li>
+            <li>📖 <strong>API Documentation</strong>: Interactive Swagger/OpenAPI documentation for all endpoints</li>
+            <li>📋 <strong>User Guide</strong>: Comprehensive README with setup and usage instructions</li>
+            <li>💬 <strong>Code Documentation</strong>: JSDoc comments for better code understanding</li>
+            <li>❓ <strong>FAQ System</strong>: This comprehensive FAQ with emojis and detailed explanations</li>
           </ul>
           
-          <h4>UI Enhancements</h4>
+          <h4>🎨 UI/UX Enhancements</h4>
           <ul>
-            <li>Enhanced TreeView: Improved group hierarchy visualization with search functionality</li>
-            <li>Member Count Display: Visual indicators of group size and hierarchy depth</li>
-            <li>Expand/Collapse: Better navigation of complex hierarchies</li>
-            <li>Accessibility Improvements: ARIA roles and keyboard navigation support</li>
+            <li>🌳 <strong>Enhanced TreeView</strong>: Improved group hierarchy visualization with search functionality</li>
+            <li>📊 <strong>Member Count Display</strong>: Visual indicators of group size and hierarchy depth</li>
+            <li>🔽 <strong>Expand/Collapse</strong>: Better navigation of complex hierarchies</li>
+            <li>♿ <strong>Accessibility</strong>: ARIA roles and keyboard navigation support</li>
+            <li>🎯 <strong>Material Design</strong>: Consistent Material UI components throughout</li>
+            <li>📱 <strong>Responsive Design</strong>: Mobile-first responsive layout</li>
           </ul>
           
-          <h4>CI/CD</h4>
+          <h4>📈 Enterprise Monitoring Dashboard</h4>
           <ul>
-            <li>GitHub Actions: Automated testing and build pipeline</li>
-            <li>Linting: Code quality checks integrated into CI pipeline</li>
-            <li>Artifact Generation: Build artifacts for deployment</li>
+            <li>📊 <strong>Real-time Sparklines</strong>: Live performance trend visualization</li>
+            <li>🚨 <strong>Intelligent Alerts</strong>: Smart monitoring with automatic threshold detection</li>
+            <li>💾 <strong>Memory Monitoring</strong>: Visual memory usage tracking with progress bars</li>
+            <li>⚡ <strong>Performance Metrics</strong>: Response times, CPU usage, and system uptime</li>
+            <li>🗄️ <strong>Database Analytics</strong>: Connection monitoring and query statistics</li>
+            <li>📤 <strong>Export Functionality</strong>: Download comprehensive health reports</li>
+            <li>🔄 <strong>Auto-refresh</strong>: Configurable live updates every 30 seconds</li>
+          </ul>
+          
+          <h4>🚀 DevOps & CI/CD</h4>
+          <ul>
+            <li>🐙 <strong>GitHub Actions</strong>: Automated testing and build pipeline</li>
+            <li>✅ <strong>Code Quality</strong>: ESLint and Prettier integration</li>
+            <li>📦 <strong>Artifact Generation</strong>: Build artifacts for deployment</li>
+            <li>🐳 <strong>Docker Optimization</strong>: Multi-stage builds and container monitoring</li>
+            <li>🔒 <strong>SSL Security</strong>: HTTPS configuration with proper certificates</li>
+          </ul>
+          
+          <h4>🎯 Code Organization</h4>
+          <ul>
+            <li>📁 <strong>Modular CSS</strong>: Separated stylesheets for better maintainability</li>
+            <li>🔷 <strong>TypeScript</strong>: Strict typing throughout the application</li>
+            <li>🎨 <strong>Component Architecture</strong>: Well-structured, reusable Svelte components</li>
+            <li>📋 <strong>API Structure</strong>: Clean, RESTful API design with proper error handling</li>
           </ul>
         </div>
       </div>

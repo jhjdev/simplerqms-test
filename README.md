@@ -1,29 +1,45 @@
-# SimplerQMS User and Group Management System
+# SimplerQMS User and Group Management System 🚀
 
 ## About This Project
 
-This project was originally a technical test for SimplerQMS that I have since expanded upon. I decided to use it as a learning tool to expand my skill set and create a showcase of various technologies and best practices in modern web development. Through this project, I've implemented testing frameworks, API documentation, UI enhancements, and CI/CD workflows to demonstrate a comprehensive approach to full-stack development.
+This project was originally a technical test for SimplerQMS that I have since expanded upon. I decided to use it as a learning tool to expand my skill set and create a showcase of various technologies and best practices in modern web development. Through this project, I've implemented testing frameworks, API documentation, UI enhancements, CI/CD workflows, and **enterprise-grade monitoring** to demonstrate a comprehensive approach to full-stack development.
 
 ## Overview
 
-This application provides a comprehensive system for managing users, groups, and their hierarchical relationships. It includes both a RESTful API and a modern web interface for managing these entities.
+This application provides a comprehensive system for managing users, groups, and their hierarchical relationships. It includes both a RESTful API, a modern web interface, and an **enterprise-grade monitoring dashboard** for managing these entities with real-time insights into system performance.
 
-## Features
+## Core Features ✨
 
-- Create, list, update, and delete users
-- Create, list, update, and delete groups
-- Add, remove, and list members of a group
-- Check if a member is within a group hierarchy
-- Get all members within a group hierarchy
-- Support for group-to-group relationships (groups can contain other groups)
-- Modern web interface for all operations
+- 👥 Create, list, update, and delete users
+- 🏢 Create, list, update, and delete groups
+- 🔗 Add, remove, and list members of a group
+- 🔍 Check if a member is within a group hierarchy
+- 📊 Get all members within a group hierarchy
+- 🏗️ Support for group-to-group relationships (groups can contain other groups)
+- 💻 Modern web interface for all operations
 
-## Technology Stack
+## Enterprise Monitoring Features 📈
 
-- **Backend**: Node.js with Express.js
-- **Database**: PostgreSQL
-- **Frontend**: Svelte with Material UI components
-- **Containerization**: Docker and Docker Compose
+- 📊 **Real-time Performance Sparklines** - Live charts showing response times, memory usage, and database connections
+- 🚨 **Intelligent Alert System** - Automatic monitoring with smart thresholds for system health
+- 💾 **Comprehensive System Metrics** - Memory usage, CPU utilization, uptime tracking, and request statistics
+- 🗄️ **Database Intelligence** - Connection monitoring, query performance, and operation statistics
+- 🔄 **Auto-refresh Dashboard** - Live updates every 30 seconds with manual refresh controls
+- 📤 **Health Report Export** - Download comprehensive system reports as JSON
+- 🐳 **Docker Container Monitoring** - Container resource usage and health status
+- ⚡ **API Traffic Analysis** - Request counts, error rates, and performance metrics
+- 📝 **Recent Activity Tracking** - Monitor last user creations and group modifications
+- 🌍 **Environment Information** - Complete system environment and version details
+
+## Technology Stack 🛠️
+
+- 🟢 **Backend**: Node.js with Express.js and TypeScript
+- 🐘 **Database**: PostgreSQL with comprehensive monitoring
+- ⚡ **Frontend**: Svelte with Material UI components and Vite
+- 🐳 **Containerization**: Docker and Docker Compose
+- 📊 **Monitoring**: Custom-built enterprise-grade health dashboard
+- 🎨 **Styling**: Modular CSS with Material Design principles
+- 🔒 **Security**: HTTPS with SSL certificates
 
 ## API Documentation
 
@@ -240,8 +256,10 @@ Response:
 
 1. Clone the repository
 2. Run `docker compose up --build` to start the application
-3. Access the API at http://localhost:3000
-4. Access the frontend at http://localhost:5173
+3. Access the API at https://localhost:3000
+4. Access the frontend at https://localhost:5173
+5. **NEW**: Access the System Health Dashboard at https://localhost:5173/health-status
+6. Access the interactive API documentation at https://localhost:3000/api-docs
 
 ### Data Persistence
 
@@ -278,51 +296,127 @@ To switch back to non-persistent mode:
 
 Note: The initial data (test user and test group) will always be created when the database is initialized, regardless of whether persistence is enabled or not.
 
-## Frontend Features
+## Frontend Features 🎨
 
-- **User Management**: Create, edit, and delete users
-- **Group Management**: Create, edit, and delete groups
-- **Group Hierarchy**: Visualize and manage the group hierarchy
-- **Membership Management**: Add and remove members from groups
-- **Membership Checking**: Check if a user or group is within a specific group hierarchy
-- **Hierarchy Exploration**: View all members within a group hierarchy
+### Core Management Features
+- 👥 **User Management**: Create, edit, and delete users
+- 🏢 **Group Management**: Create, edit, and delete groups
+- 🌳 **Group Hierarchy**: Visualize and manage the group hierarchy
+- 🔗 **Membership Management**: Add and remove members from groups
+- 🔍 **Membership Checking**: Check if a user or group is within a specific group hierarchy
+- 📊 **Hierarchy Exploration**: View all members within a group hierarchy
 
-## Bonus Features Implemented
+### Enterprise Monitoring Dashboard
+- 📈 **Real-time Sparklines**: Live performance trend visualization with SVG charts
+- 🚨 **Smart Alert System**: Intelligent monitoring with automatic threshold detection
+- 💾 **Memory Monitoring**: Visual memory usage tracking with animated progress bars
+- ⚡ **Performance Metrics**: Response times, CPU usage, and system uptime
+- 🗄️ **Database Analytics**: Connection monitoring, query statistics, and size tracking
+- 📤 **Export Functionality**: Download comprehensive health reports as JSON
+- 🔄 **Auto-refresh**: Configurable live updates every 30 seconds
+- 🎯 **Current System Status**: Real-time status indicators for all services
+- 📝 **Recent Activity**: Track last user creations and group modifications
+- 🌍 **Environment Details**: Complete system environment and version information
 
-### Testing
+## Bonus Features Implemented 🎁
 
-- **Unit Tests**: Backend API endpoint tests using Jest and Supertest
-- **Frontend Tests**: Component tests using Vitest and Testing Library
-- **Test Configuration**: Separate TypeScript configuration for tests
+### Testing Framework 🧪
+- 🟢 **Unit Tests**: Backend API endpoint tests using Jest and Supertest
+- ⚡ **Frontend Tests**: Component tests using Vitest and Testing Library
+- ⚙️ **Test Configuration**: Separate TypeScript configuration for tests
+- 📊 **Coverage Reports**: Comprehensive test coverage tracking
 
-### Documentation
+### Documentation 📚
+- 📖 **API Documentation**: Interactive Swagger/OpenAPI documentation for all endpoints
+- 📋 **User Guide**: Comprehensive README with setup and usage instructions
+- 💬 **Code Documentation**: JSDoc comments for better code understanding
+- ❓ **FAQ System**: Comprehensive FAQ with emojis and detailed explanations
 
-- **API Documentation**: Swagger/OpenAPI documentation for all endpoints
-- **User Guide**: Comprehensive README with setup and usage instructions
-- **Code Documentation**: JSDoc comments for better code understanding
+### UI/UX Enhancements 🎨
+- 🌳 **Enhanced TreeView**: Improved group hierarchy visualization with search functionality
+- 📊 **Member Count Display**: Visual indicators of group size and hierarchy depth
+- 🔽 **Expand/Collapse**: Better navigation of complex hierarchies
+- ♿ **Accessibility**: ARIA roles and keyboard navigation support
+- 🎯 **Material Design**: Consistent Material UI components throughout
+- 📱 **Responsive Design**: Mobile-first responsive layout
 
-### UI Enhancements
+### Enterprise Monitoring Dashboard 📈
+- 📊 **Real-time Sparklines**: Live performance trend visualization
+- 🚨 **Intelligent Alerts**: Smart monitoring with automatic threshold detection
+- 💾 **Memory Monitoring**: Visual memory usage tracking with progress bars
+- ⚡ **Performance Metrics**: Response times, CPU usage, and system uptime
+- 🗄️ **Database Analytics**: Connection monitoring and query statistics
+- 📤 **Export Functionality**: Download comprehensive health reports
+- 🔄 **Auto-refresh**: Configurable live updates every 30 seconds
 
-- **Enhanced TreeView**: Improved group hierarchy visualization with search functionality
-- **Member Count Display**: Visual indicators of group size and hierarchy depth
-- **Expand/Collapse**: Better navigation of complex hierarchies
-- **Accessibility Improvements**: ARIA roles and keyboard navigation support
+### DevOps & CI/CD 🚀
+- 🐙 **GitHub Actions**: Automated testing and build pipeline
+- ✅ **Code Quality**: ESLint and Prettier integration
+- 📦 **Artifact Generation**: Build artifacts for deployment
+- 🐳 **Docker Optimization**: Multi-stage builds and container monitoring
+- 🔒 **SSL Security**: HTTPS configuration with proper certificates
 
-### CI/CD
+### Code Organization 🎯
+- 📁 **Modular CSS**: Separated stylesheets for better maintainability
+- 🔷 **TypeScript**: Strict typing throughout the application
+- 🎨 **Component Architecture**: Well-structured, reusable Svelte components
+- 📋 **API Structure**: Clean, RESTful API design with proper error handling
 
-- **GitHub Actions**: Automated testing and build pipeline
-- **Linting**: Code quality checks integrated into CI pipeline
-- **Artifact Generation**: Build artifacts for deployment
+## Quick Access Links 🌐
 
-## Future Improvements
+- 🚀 **Frontend Application**: https://localhost:5173
+- 📊 **System Health Dashboard**: https://localhost:5173/health-status
+- 📖 **API Documentation**: https://localhost:3000/api-docs
+- ❓ **FAQ Page**: https://localhost:5173/faq
+- ⚡ **Health Check API**: https://localhost:3000/health
+- 👥 **Groups API**: https://localhost:3000/api/groups
+- 👤 **Users API**: https://localhost:3000/api/users
+
+## Key Monitoring Endpoints 📊
+
+### Health Check API
+```bash
+# Comprehensive system health with metrics
+GET https://localhost:3000/health
+```
+
+Returns detailed system information including:
+- API server status, uptime, and memory usage
+- Database connection status, size, and query statistics
+- Request counts, error rates, and performance metrics
+- Recent activity and alert history
+- Environment and version information
+- Performance history for sparkline charts
+
+### Alert Monitoring
+The system automatically monitors:
+- High memory usage (>80%)
+- High error rates (>5%)
+- Slow response times (>1000ms)
+- Slow database queries (>500ms)
+
+## Screenshots 📸
+
+### System Health Dashboard
+The enterprise monitoring dashboard provides:
+- Real-time system status overview
+- Performance sparklines showing trends
+- Memory usage visualization
+- Alert history and notifications
+- Database analytics and statistics
+- Export functionality for reports
+
+## Future Improvements 🔮
 
 - Add authentication and authorization
 - Implement pagination for large datasets
+- Add real-time WebSocket updates for live monitoring
 - Implement caching for frequently accessed group hierarchies
 - Add multitenancy support
 - Optimize database queries for large hierarchies
-- Add support for multitenancy
-- Add screenshots or diagrams to illustrate the application
+- Add log aggregation and analysis
+- Implement custom alert thresholds
+- Add performance baselines and trend analysis
 
 # Some notes about the base setup
 
@@ -459,8 +553,9 @@ docker compose exec node ash -c "nc -zv postgres 5432"
 # List PostgreSQL tables
 docker compose exec postgres psql -U backend -d simplerqms_test_db -c "\dt;"
 
-# Test API endpoint
-curl http://localhost:3000/api/users
+# Test API endpoints
+curl https://localhost:3000/api/users
+curl https://localhost:3000/health
 ```
 
 ### Additional Resources
