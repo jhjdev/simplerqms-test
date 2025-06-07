@@ -35,7 +35,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_DB=${POSTGRES_DB}
     working_dir: /app
-    command: sh -c "npm install --legacy-peer-deps && npm run build && npm start"
+    command: sh -c "npm install --legacy-peer-deps && npm run build && node --max-old-space-size=100 ./dist/app.js"
     healthcheck:
       test:
         [
