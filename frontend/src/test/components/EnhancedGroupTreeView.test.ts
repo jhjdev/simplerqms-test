@@ -10,7 +10,16 @@ describe('EnhancedGroupTreeView', () => {
       name: 'Test Group',
       parent_id: null,
       children: [],
-      users: [],
+      users: [
+        {
+          id: '1',
+          name: 'John Doe',
+          email: 'john@example.com',
+          type: 'user',
+          group_id: '1',
+          created_at: '2024-01-01T00:00:00Z'
+        }
+      ],
       type: 'group',
       level: 0,
       created_at: '2024-01-01T00:00:00Z',
@@ -24,7 +33,7 @@ describe('EnhancedGroupTreeView', () => {
       name: 'John Doe',
       email: 'john@example.com',
       type: 'user',
-      groupId: '1',
+      group_id: '1',
       created_at: '2024-01-01T00:00:00Z'
     }
   ];
@@ -83,7 +92,7 @@ describe('EnhancedGroupTreeView', () => {
     await new Promise(resolve => setTimeout(resolve, 0));
 
     // Check if user is displayed
-    const userItem = container.querySelector('.user-item');
+    const userItem = container.querySelector('.user-items-container .user-item');
     expect(userItem).toBeTruthy();
     expect(userItem?.textContent).toContain('John Doe');
     expect(userItem?.textContent).toContain('john@example.com');
@@ -122,7 +131,16 @@ describe('EnhancedGroupTreeView', () => {
     const searchInput = container.querySelector('.search-input');
     if (searchInput) {
       await fireEvent.input(searchInput, { target: { value: 'John Doe' } });
-      expect(container.querySelector('.user-item')).toBeTruthy();
+      // Expand all groups after filtering
+      const expandAllButton = container.querySelector('.control-btn');
+      if (expandAllButton) {
+        await fireEvent.click(expandAllButton);
+      }
+      await new Promise(resolve => setTimeout(resolve, 0));
+      // Debug output
+      // eslint-disable-next-line no-console
+      console.log('Container HTML after filtering and expanding:', container.innerHTML);
+      expect(container.querySelector('.user-items-container .user-item')).toBeTruthy();
       expect(container.querySelector('.user-name')).toHaveTextContent('John Doe');
     }
   });
