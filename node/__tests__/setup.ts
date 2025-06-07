@@ -1,8 +1,8 @@
-import { mockDb } from './mocks/db';
+import { mock } from './mocks/mock';
 
 // Reset the mock database before each test
 beforeEach(() => {
-  mockDb.reset();
+  mock.reset();
 });
 
 // No cleanup needed after tests since we're using in-memory data

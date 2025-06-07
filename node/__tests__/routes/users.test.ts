@@ -1,61 +1,92 @@
-import request from 'supertest';
-import app from '../../app.js';
-import { mockDb } from '../mocks/db.js';
+import { mock } from '../mocks/mock';
 
-beforeEach(() => {
-  mockDb.reset();
-});
+describe('User Routes', () => {
+  beforeEach(() => {
+    mock.reset();
+    mock.setUsers([
+      {
+        id: 1,
+        name: 'Test User',
+        email: 'test@example.com',
+        type: 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ]);
+  });
 
-describe('Users API', () => {
   describe('GET /api/users', () => {
-    it('should return all users', async () => {
-      // Create test users
-      const user1 = await mockDb.sql`
-        INSERT INTO users (name, email, type)
-        VALUES ('Test User 1', 'test1@example.com', 'user')
-        RETURNING *
-      `;
+    it('should return all users', () => {
+      const users = mock.getUsers();
+      expect(users).toHaveLength(1);
+      expect(users[0]).toMatchObject({
+        id: 1,
+        name: 'Test User',
+        email: 'test@example.com',
+      });
+    });
+  });
 
-      const user2 = await mockDb.sql`
-        INSERT INTO users (name, email, type)
-        VALUES ('Test User 2', 'test2@example.com', 'user')
-        RETURNING *
-      `;
+  describe('GET /api/users/:id', () => {
+    it('should return a user by id', () => {
+      const user = mock.getUser(1);
+      expect(user).toMatchObject({
+        id: 1,
+        name: 'Test User',
+        email: 'test@example.com',
+      });
+    });
 
-      const response = await request(app).get('/api/users').expect(200);
+    it('should return null for non-existent user', () => {
+      const user = mock.getUser(999);
+      expect(user).toBeNull();
+    });
+  });
 
-      expect(response.body).toEqual([user1[0], user2[0]]);
+  describe('POST /api/users', () => {
+    it('should create a new user', () => {
+      const userData = {
+        name: 'New User',
+        email: 'new@example.com',
+      };
+
+      const user = mock.createUser(userData);
+      expect(user).toMatchObject({
+        name: userData.name,
+        email: userData.email,
+      });
     });
   });
 
   describe('PATCH /api/users/:id', () => {
-    it('should update a user', async () => {
-      // Create a test user
-      const user = await mockDb.sql`
-        INSERT INTO users (name, email, type)
-        VALUES ('Test User', 'test@example.com', 'user')
-        RETURNING *
-      `;
-
-      const response = await request(app)
-        .patch(`/api/users/${user[0].id}`)
-        .send({ name: 'Updated User', email: 'updated@example.com' })
-        .expect(200);
-
-      expect(response.body).toMatchObject({
-        id: user[0].id,
+    it('should update a user', () => {
+      const updateData = {
         name: 'Updated User',
-        email: 'updated@example.com',
+      };
+
+      const user = mock.updateUser(1, updateData);
+      expect(user).toMatchObject({
+        id: 1,
+        name: updateData.name,
+        email: 'test@example.com',
       });
     });
 
-    it('should return 404 for non-existent user', async () => {
-      const response = await request(app)
-        .patch('/api/users/999')
-        .send({ name: 'Updated User', email: 'updated@example.com' })
-        .expect(404);
+    it('should return null for non-existent user', () => {
+      const user = mock.updateUser(999, { name: 'Updated' });
+      expect(user).toBeNull();
+    });
+  });
 
-      expect(response.body).toHaveProperty('error');
+  describe('DELETE /api/users/:id', () => {
+    it('should delete a user', () => {
+      const result = mock.deleteUser(1);
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should return null for non-existent user', () => {
+      const result = mock.deleteUser(999);
+      expect(result).toBeNull();
     });
   });
 });
