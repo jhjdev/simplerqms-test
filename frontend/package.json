@@ -13,14 +13,21 @@
     "lint": "eslint ."
   },
   "devDependencies": {
+    "@eslint/js": "^9.28.0",
     "@smui/dialog": "7.0.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/svelte": "^5.2.7",
     "@tsconfig/svelte": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/parser": "^8.33.1",
     "eslint": "^9.28.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-svelte": "^3.9.1",
     "jsdom": "^24.0.0",
+    "prettier": "^3.5.3",
     "svelte": "4.2.12",
     "svelte-check": "^4.2.1",
+    "svelte-eslint-parser": "^1.2.0",
     "tslib": "^2.6.0",
     "typescript": "^5.0.0",
     "vitest": "^3.1.2"
