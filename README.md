@@ -288,15 +288,132 @@ Response:
 ### Prerequisites
 
 - Docker and Docker Compose
+- OpenSSL (for generating SSL certificates)
+
+### SSL Certificate Setup
+
+The application requires SSL certificates for HTTPS functionality. Before running the application for the first time, you need to generate the SSL certificates.
+
+#### Automatic SSL Generation (Recommended)
+
+Run the following script to automatically generate all required SSL certificates:
+
+```bash
+# Make sure you're in the project root directory
+./generate-ssl.sh
+```
+
+#### Manual SSL Generation
+
+If you prefer to generate certificates manually or the script doesn't work on your system:
+
+```bash
+# Create the ssl directory if it doesn't exist
+mkdir -p ssl
+cd ssl
+
+# 1. Generate a Certificate Authority (CA) private key
+openssl genrsa -out ca-key.pem 4096
+
+# 2. Generate the CA certificate
+openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca-cert.pem -subj "/C=US/ST=CA/L=San Francisco/O=SimplerQMS Development/CN=SimplerQMS CA"
+
+# 3. Generate a server private key
+openssl genrsa -out key.pem 4096
+
+# 4. Generate a certificate signing request (CSR)
+openssl req -subj "/C=US/ST=CA/L=San Francisco/O=SimplerQMS Development/CN=localhost" -new -key key.pem -out localhost.csr
+
+# 5. Create the certificate extensions file
+cat > localhost.conf << EOF
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = US
+ST = CA
+L = San Francisco
+O = SimplerQMS Development
+CN = localhost
+
+[v3_req]
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+basicConstraints = CA:FALSE
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = *.localhost
+IP.1 = 127.0.0.1
+IP.2 = ::1
+EOF
+
+# 6. Generate the server certificate signed by our CA
+openssl x509 -req -in localhost.csr -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -days 365 -extensions v3_req -extfile localhost.conf
+
+# 7. Create symbolic links for easier reference
+ln -sf cert.pem localhost.pem
+ln -sf key.pem localhost-key.pem
+
+# 8. Set appropriate permissions
+chmod 600 ca-key.pem key.pem
+chmod 644 ca-cert.pem cert.pem localhost.csr localhost.conf
+
+# Return to project root
+cd ..
+```
+
+#### Trusting the Certificate (Optional)
+
+To avoid browser security warnings, you can add the CA certificate to your system's trusted certificates:
+
+**macOS:**
+```bash
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ssl/ca-cert.pem
+```
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo cp ssl/ca-cert.pem /usr/local/share/ca-certificates/simplerqms-ca.crt
+sudo update-ca-certificates
+```
+
+**Windows:**
+1. Double-click on `ssl/ca-cert.pem`
+2. Click "Install Certificate"
+3. Select "Local Machine" and click "Next"
+4. Select "Place all certificates in the following store"
+5. Click "Browse" and select "Trusted Root Certification Authorities"
+6. Click "Next" and then "Finish"
+
+#### SSL Files Explanation
+
+After generation, your `ssl/` directory will contain:
+
+- `ca-key.pem` - Certificate Authority private key (keep secure)
+- `ca-cert.pem` - Certificate Authority certificate
+- `key.pem` - Server private key (keep secure)
+- `cert.pem` - Server certificate
+- `localhost.csr` - Certificate signing request
+- `localhost.conf` - Certificate configuration
+- `localhost.pem` - Symbolic link to cert.pem
+- `localhost-key.pem` - Symbolic link to key.pem
+- `ca-cert.srl` - CA serial number file
+
+**Important:** The SSL files are already included in `.gitignore` to prevent accidentally committing private keys to the repository.
 
 ### Running the Application
 
 1. Clone the repository
-2. Run `docker compose up --build` to start the application
-3. Access the frontend at https://localhost:5173
-4. Access the System Health Dashboard at https://localhost:5173/health-status
-5. Access the API at https://localhost:3000
-6. Access the interactive API documentation at https://localhost:3000/api-docs
+2. Generate SSL certificates (see SSL Certificate Setup above)
+3. Run `docker compose up --build` to start the application
+4. Access the frontend at https://localhost:5173
+5. Access the System Health Dashboard at https://localhost:5173/health-status
+6. Access the API at https://localhost:3000
+7. Access the interactive API documentation at https://localhost:3000/api-docs
 
 ### Data Persistence
 
