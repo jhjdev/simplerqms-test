@@ -2,7 +2,7 @@
 
 ## About This Project
 
-This project was originally a technical test for SimplerQMS that I have since expanded upon. I decided to use it as a learning tool to expand my skill set and create a showcase of various technologies and best practices in modern web development. Through this project, I've implemented testing frameworks, API documentation, UI enhancements, CI/CD workflows, and **enterprise-grade monitoring** to demonstrate a comprehensive approach to full-stack development.
+This project was originally a technical test for a startup in Copenhagen that developes a Life Science Quality Management Software, that I have since expanded upon. I decided to use it as a learning tool to expand my skill set and create a showcase of various technologies and best practices in modern web development. Through this project, I've implemented testing frameworks, API documentation, UI enhancements, CI/CD workflows, and **enterprise-grade monitoring** to demonstrate a comprehensive approach to full-stack development.
 
 ## Overview
 
